@@ -12,7 +12,14 @@
                 </h4>
             </div>
             <div class="card-body">
-                <form hx-post="/api/register" hx-target="body" hx-push-url="true">
+                <!-- IMPORTANT: HTMX ko JSON bhejne ke liye -->
+                <form id="registerForm" hx-post="/api/register" 
+                      hx-target="#response-message" 
+                      hx-swap="innerHTML"
+                      hx-headers='{"Content-Type": "application/json"}'>
+                      
+                    <div id="response-message"></div>
+                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="name" class="form-label">
@@ -23,53 +30,61 @@
                         
                         <div class="col-md-6 mb-3">
                             <label for="username" class="form-label">
-                                <i class="fas fa-at me-1"></i>Username
+                                <i class="fas fa-at me-1"></i>Username *
                             </label>
-                            <input type="text" class="form-control" id="username" name="username" required>
+                            <input type="text" class="form-control" id="username" name="username" required
+                                   placeholder="Choose a username for login">
                         </div>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="email" class="form-label">
-                                <i class="fas fa-envelope me-1"></i>Email (Optional)
+                                <i class="fas fa-envelope me-1"></i>Email (Optional but recommended)
                             </label>
-                            <input type="email" class="form-control" id="email" name="email">
+                            <input type="email" class="form-control" id="email" name="email"
+                                   placeholder="user@example.com">
                         </div>
                         
                         <div class="col-md-6 mb-3">
                             <label for="phone" class="form-label">
-                                <i class="fas fa-phone me-1"></i>Phone Number
+                                <i class="fas fa-phone me-1"></i>Phone Number *
                             </label>
-                            <input type="tel" class="form-control" id="phone" name="phone" required>
+                            <input type="tel" class="form-control" id="phone" name="phone" required
+                                   pattern="[0-9]{10}" 
+                                   placeholder="10-digit mobile number">
                         </div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="address" class="form-label">
-                            <i class="fas fa-home me-1"></i>Delivery Address
+                            <i class="fas fa-home me-1"></i>Delivery Address *
                         </label>
-                        <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                        <textarea class="form-control" id="address" name="address" rows="3" required
+                                  placeholder="House no, Street, City, PIN"></textarea>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="password" class="form-label">
-                                <i class="fas fa-lock me-1"></i>Password
+                                <i class="fas fa-lock me-1"></i>Password *
                             </label>
-                            <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   required minlength="6"
+                                   placeholder="At least 6 characters">
                         </div>
                         
                         <div class="col-md-6 mb-3">
                             <label for="confirm_password" class="form-label">
-                                <i class="fas fa-lock me-1"></i>Confirm Password
+                                <i class="fas fa-lock me-1"></i>Confirm Password *
                             </label>
-                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="6">
+                            <input type="password" class="form-control" id="confirm_password" 
+                                   name="confirm_password" required minlength="6">
                         </div>
                     </div>
                     
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
                             <i class="fas fa-user-plus me-2"></i>Register
                         </button>
                         <a href="/" class="btn btn-outline-secondary">
@@ -91,17 +106,137 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
+    const form = document.getElementById('registerForm');
     const password = document.getElementById('password');
     const confirmPassword = document.getElementById('confirm_password');
+    const submitBtn = document.getElementById('submitBtn');
+    const responseDiv = document.getElementById('response-message');
     
+    // Password validation
     form.addEventListener('submit', function(event) {
         if (password.value !== confirmPassword.value) {
             event.preventDefault();
-            alert('Passwords do not match!');
+            showMessage('Passwords do not match!', 'danger');
             confirmPassword.focus();
+            return false;
+        }
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Registering...';
+        
+        // Show loading message
+        showMessage('Processing your registration...', 'info');
+    });
+    
+    // Custom HTMX configuration for JSON
+    htmx.on('htmx:configRequest', function(event) {
+        if (event.detail.path === '/api/register') {
+            // Prevent default form submission
+            event.preventDefault();
+            
+            // Collect form data
+            const formData = {
+                username: document.getElementById('username').value.trim(),
+                full_name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim() || null,
+                phone: document.getElementById('phone').value.trim(),
+                address: document.getElementById('address').value.trim(),
+                password: document.getElementById('password').value
+            };
+            
+            console.log('Sending registration data:', formData);
+            
+            // Set custom request
+            event.detail.headers['Content-Type'] = 'application/json';
+            event.detail.verb = 'post';
+            event.detail.body = JSON.stringify(formData);
+            event.detail.target = '#response-message';
+            event.detail.swap = 'innerHTML';
+        }
+    });
+    
+    // Handle HTMX response
+    htmx.on('htmx:afterRequest', function(event) {
+        if (event.detail.path === '/api/register') {
+            // Re-enable button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Register';
+            
+            // Check response status
+            if (event.detail.successful) {
+                try {
+                    const response = JSON.parse(event.detail.xhr.responseText);
+                    if (response.success) {
+                        showMessage('✅ Registration successful! Redirecting...', 'success');
+                        setTimeout(() => {
+                            window.location.href = response.redirect_url || '/services';
+                        }, 2000);
+                    } else {
+                        showMessage('❌ ' + (response.detail || response.error || 'Registration failed'), 'danger');
+                    }
+                } catch (e) {
+                    showMessage('✅ Registration successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/services';
+                    }, 1000);
+                }
+            } else {
+                showMessage('❌ Network error. Please try again.', 'danger');
+            }
+        }
+    });
+    
+    // Function to show messages
+    function showMessage(message, type) {
+        responseDiv.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // Auto-remove success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                responseDiv.innerHTML = '';
+            }, 3000);
+        }
+    }
+    
+    // Real-time username suggestion from email
+    const emailInput = document.getElementById('email');
+    const usernameInput = document.getElementById('username');
+    
+    emailInput.addEventListener('blur', function() {
+        if (emailInput.value && !usernameInput.value) {
+            const emailUsername = emailInput.value.split('@')[0];
+            usernameInput.value = emailUsername;
         }
     });
 });
 </script>
+
+<style>
+.alert {
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .col-md-6 {
+        margin-bottom: 1rem;
+    }
+}
+</style>
 {% endblock %}
