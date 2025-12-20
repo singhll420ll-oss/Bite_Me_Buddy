@@ -1,0 +1,468 @@
+/* Custom CSS for Bite Me Buddy */
+
+/* Custom variables */
+:root {
+    --primary: #ff6b35;
+    --primary-dark: #e55a2b;
+    --secondary: #f4a261;
+    --accent: #2a9d8f;
+    --light: #f8f9fa;
+    --dark: #264653;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #17a2b8;
+}
+
+/* Global styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    padding-top: 20px;
+    padding-bottom: 80px;
+    min-height: 100vh;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+}
+
+.display-1, .display-2, .display-3, .display-4 {
+    font-weight: 700;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    border: none;
+    font-weight: 600;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 10px;
+    font-weight: 500;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+}
+
+.btn-lg {
+    padding: 15px 30px;
+    border-radius: 15px;
+}
+
+.btn-sm {
+    padding: 5px 15px;
+    border-radius: 8px;
+}
+
+/* Forms */
+.form-control, .form-select {
+    border-radius: 10px;
+    padding: 10px 15px;
+    border: 2px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.25rem rgba(255, 107, 53, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+/* Navigation */
+.navbar {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    padding: 10px 15px !important;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 107, 53, 0.1);
+}
+
+/* Service cards */
+.service-card {
+    cursor: pointer;
+    height: 100%;
+}
+
+.service-card img {
+    height: 200px;
+    object-fit: cover;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+/* Menu items */
+.menu-item-card {
+    margin-bottom: 15px;
+}
+
+.menu-item-img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+/* Cart items */
+.cart-item {
+    border-bottom: 1px solid #dee2e6;
+    padding: 15px 0;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+/* Order status badges */
+.status-badge {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.status-pending { background-color: var(--warning); color: #000; }
+.status-confirmed { background-color: var(--info); color: #fff; }
+.status-preparing { background-color: var(--primary); color: #fff; }
+.status-out_for_delivery { background-color: #6c757d; color: #fff; }
+.status-delivered { background-color: var(--success); color: #fff; }
+.status-cancelled { background-color: var(--danger); color: #fff; }
+
+/* Footer */
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--dark);
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    z-index: 1000;
+}
+
+/* Mobile buttons */
+.mobile-btn {
+    padding: 20px;
+    font-size: 1.2rem;
+    margin: 10px 0;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.mobile-btn i {
+    font-size: 2rem;
+}
+
+/* Clock */
+.clock-container {
+    text-align: center;
+    margin: 30px auto;
+    padding: 30px;
+    background: linear-gradient(135deg, var(--dark), var(--accent));
+    border-radius: 20px;
+    color: white;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    max-width: 600px;
+}
+
+#realTimeClock {
+    font-family: 'Courier New', monospace;
+    font-size: 4rem;
+    font-weight: bold;
+    letter-spacing: 5px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    margin: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.clock-edit {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Admin panel */
+.admin-panel {
+    background-color: var(--dark);
+    color: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.admin-nav {
+    background-color: #343a40;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.admin-nav a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.admin-nav a:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: var(--secondary);
+}
+
+.admin-nav a.active {
+    background-color: var(--primary);
+    color: white;
+}
+
+/* Tables */
+.table-responsive {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(255, 107, 53, 0.05);
+}
+
+/* Progress bars */
+.progress {
+    border-radius: 10px;
+    height: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+/* Alerts */
+.alert {
+    border-radius: 10px;
+    border: none;
+    padding: 15px 20px;
+}
+
+.alert-primary {
+    background-color: rgba(255, 107, 53, 0.1);
+    color: var(--primary);
+    border-left: 4px solid var(--primary);
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--success);
+    border-left: 4px solid var(--success);
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--warning);
+    border-left: 4px solid var(--warning);
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger);
+    border-left: 4px solid var(--danger);
+}
+
+/* Badges */
+.badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+/* Loading spinners */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #realTimeClock {
+        font-size: 3rem;
+    }
+    
+    .mobile-btn {
+        padding: 15px;
+        font-size: 1rem;
+    }
+    
+    .clock-container {
+        margin: 20px 0;
+        padding: 20px;
+    }
+    
+    .admin-nav {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .admin-nav a {
+        text-align: center;
+    }
+    
+    .menu-item-card .row {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .menu-item-img {
+        width: 150px;
+        height: 150px;
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    #realTimeClock {
+        font-size: 2.5rem;
+        letter-spacing: 2px;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+    }
+    
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar, .footer, .btn {
+        display: none !important;
+    }
+    
+    body {
+        padding: 0;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #dee2e6;
+    }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    :root {
+        --primary: #ff4500;
+        --dark: #000000;
+    }
+    
+    .card {
+        border: 2px solid #000;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --light: #212529;
+        --dark: #f8f9fa;
+    }
+    
+    body {
+        background-color: #121212;
+        color: #f8f9fa;
+    }
+    
+    .card {
+        background-color: #1e1e1e;
+        color: #f8f9fa;
+    }
+    
+    .table {
+        color: #f8f9fa;
+    }
+    
+    .form-control, .form-select {
+        background-color: #2d2d2d;
+        border-color: #444;
+        color: #f8f9fa;
+    }
+}
