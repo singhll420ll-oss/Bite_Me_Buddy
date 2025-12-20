@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Bite Me Buddy - Home{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="display-4 mb-4" style="color: var(--primary-color);">
+        <i class="fas fa-utensils"></i> Bite Me Buddy
+    </h1>
+    <p class="lead">Delicious food delivered to your doorstep</p>
+</div>
+
+<!-- Real Time Clock -->
+<div class="clock-container mx-auto" style="max-width: 600px;">
+    <h5 class="mb-3">
+        <i class="fas fa-clock me-2"></i>Indian Standard Time (IST)
+    </h5>
+    <div id="realTimeClock">Loading...</div>
+    <div class="clock-edit" id="clockEdit" style="display: none;">
+        <div class="row justify-content-center g-2">
+            <div class="col-auto">
+                <input type="number" id="editHour" class="form-control" placeholder="HH" min="1" max="12" style="width: 80px;">
+            </div>
+            <div class="col-auto">
+                <span class="fs-4">:</span>
+            </div>
+            <div class="col-auto">
+                <input type="number" id="editMinute" class="form-control" placeholder="MM" min="0" max="59" style="width: 80px;">
+            </div>
+            <div class="col-auto">
+                <select id="editAmPm" class="form-select" style="width: 100px;">
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button id="saveClock" class="btn btn-light">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <button id="cancelEdit" class="btn btn-outline-light">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="row g-3">
+            <div class="col-12">
+                <a href="/register" class="btn btn-primary btn-lg w-100 mobile-btn">
+                    <i class="fas fa-user-plus fa-2x mb-2 d-block"></i>
+                    New Registration
+                </a>
+            </div>
+            <div class="col-12">
+                <a href="/login?type=customer" class="btn btn-secondary btn-lg w-100 mobile-btn">
+                    <i class="fas fa-sign-in-alt fa-2x mb-2 d-block"></i>
+                    Already Registered (Customer Login)
+                </a>
+            </div>
+            <div class="col-12">
+                <a href="/login?type=team" class="btn btn-dark btn-lg w-100 mobile-btn">
+                    <i class="fas fa-users fa-2x mb-2 d-block"></i>
+                    Team Member Login
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features -->
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center p-3">
+            <div class="card-body">
+                <i class="fas fa-bolt fa-3x mb-3" style="color: var(--primary-color);"></i>
+                <h5 class="card-title">Fast Delivery</h5>
+                <p class="card-text">Get your food delivered hot and fresh in under 30 minutes.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center p-3">
+            <div class="card-body">
+                <i class="fas fa-star fa-3x mb-3" style="color: var(--primary-color);"></i>
+                <h5 class="card-title">Quality Food</h5>
+                <p class="card-text">Prepared by expert chefs with fresh ingredients.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center p-3">
+            <div class="card-body">
+                <i class="fas fa-shield-alt fa-3x mb-3" style="color: var(--primary-color);"></i>
+                <h5 class="card-title">Secure Ordering</h5>
+                <p class="card-text">Safe and secure ordering with OTP verification.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/clock.js"></script>
+{% endblock %}
