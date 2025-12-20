@@ -11,35 +11,62 @@
 </div>
 
 <!-- Real Time Clock -->
-<div class="clock-container mx-auto" style="max-width: 600px;">
-    <h5 class="mb-3">
+<div class="clock-container mx-auto" style="max-width: 700px;">
+    <h5 class="mb-3 text-center">
         <i class="fas fa-clock me-2"></i>Indian Standard Time (IST)
     </h5>
-    <div id="realTimeClock">Loading...</div>
+    
+    <!-- Clock with touch area -->
+    <div id="realTimeClock" class="text-center">
+        Loading...
+    </div>
+    
+    <p class="clock-hint text-center mt-2">
+        <i class="fas fa-hand-point-up me-1"></i>
+        Touch and hold for 15 seconds for admin access
+    </p>
+    
+    <!-- Edit Mode (Hidden by default) -->
     <div class="clock-edit" id="clockEdit" style="display: none;">
-        <div class="row justify-content-center g-2">
+        <div class="row justify-content-center g-3 align-items-center">
             <div class="col-auto">
-                <input type="number" id="editHour" class="form-control" placeholder="HH" min="1" max="12" style="width: 80px;">
+                <input type="number" id="editHour" class="form-control clock-input" 
+                       placeholder="HH" min="1" max="12" style="width: 100px;"
+                       oninput="this.value=this.value.slice(0,2)">
             </div>
             <div class="col-auto">
-                <span class="fs-4">:</span>
+                <span class="fs-3 fw-bold">:</span>
             </div>
             <div class="col-auto">
-                <input type="number" id="editMinute" class="form-control" placeholder="MM" min="0" max="59" style="width: 80px;">
+                <input type="number" id="editMinute" class="form-control clock-input" 
+                       placeholder="MM" min="0" max="59" style="width: 100px;"
+                       oninput="this.value=this.value.slice(0,2)">
             </div>
             <div class="col-auto">
-                <select id="editAmPm" class="form-select" style="width: 100px;">
+                <select id="editAmPm" class="form-select clock-input" style="width: 110px;">
                     <option value="AM">AM</option>
                     <option value="PM">PM</option>
                 </select>
             </div>
+        </div>
+        
+        <div class="row justify-content-center mt-4">
             <div class="col-auto">
-                <button id="saveClock" class="btn btn-light">
-                    <i class="fas fa-save"></i> Save
+                <button id="saveClock" class="btn btn-success btn-lg px-4">
+                    <i class="fas fa-unlock me-2"></i> Unlock Admin
                 </button>
-                <button id="cancelEdit" class="btn btn-outline-light">
-                    <i class="fas fa-times"></i>
+                <button id="cancelEdit" class="btn btn-outline-secondary btn-lg px-4 ms-2">
+                    <i class="fas fa-times me-2"></i> Cancel
                 </button>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center mt-3">
+            <div class="col-auto">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Enter <strong>3:43 AM</strong> to access admin panel
+                </small>
             </div>
         </div>
     </div>
@@ -101,8 +128,341 @@
         </div>
     </div>
 </div>
+
+<!-- Progress Bar Overlay (Dynamically added by JS) -->
+<div id="clock-progress-overlay" style="display: none;"></div>
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/clock.js"></script>
+<!-- Inline JavaScript (All in one place) -->
+<script>
+// Real Time Clock with IST - 15 Second Touch + Time Set for Admin
+document.addEventListener('DOMContentLoaded', function() {
+    const clockElement = document.getElementById('realTimeClock');
+    const clockEdit = document.getElementById('clockEdit');
+    const editHour = document.getElementById('editHour');
+    const editMinute = document.getElementById('editMinute');
+    const editAmPm = document.getElementById('editAmPm');
+    const saveBtn = document.getElementById('saveClock');
+    const cancelBtn = document.getElementById('cancelEdit');
+    
+    let touchTimer = null;
+    let progressInterval = null;
+    let isTouching = false;
+    let touchStartTime = 0;
+    const REQUIRED_TIME = 15000; // 15 seconds
+    
+    // =================== STYLING ===================
+    // Add clock styling
+    clockElement.style.cssText = `
+        font-size: 4rem;
+        font-weight: bold;
+        font-family: 'Courier New', monospace;
+        padding: 30px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        margin: 0 auto;
+        max-width: 500px;
+    `;
+    
+    // Create progress bar
+    const progressBar = document.createElement('div');
+    progressBar.id = 'touch-progress-bar';
+    progressBar.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.4);
+        transition: width 0.1s linear;
+        z-index: 1;
+        pointer-events: none;
+    `;
+    clockElement.appendChild(progressBar);
+    
+    // =================== CLOCK FUNCTION ===================
+    // Update clock every second
+    function updateClock() {
+        const now = new Date();
+        
+        // Convert to IST (UTC + 5:30)
+        const istOffset = 5.5 * 60 * 60 * 1000;
+        const istTime = new Date(now.getTime() + istOffset);
+        
+        let hours = istTime.getHours();
+        const minutes = istTime.getMinutes().toString().padStart(2, '0');
+        const seconds = istTime.getSeconds().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        // Convert to 12-hour format
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        hours = hours.toString().padStart(2, '0');
+        
+        // Wrap time in span for z-index
+        clockElement.innerHTML = `<span style="position: relative; z-index: 2;">${hours}:${minutes}:${seconds} ${ampm}</span>`;
+        clockElement.appendChild(progressBar);
+    }
+    
+    // Start clock
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // =================== 15 SECOND TOUCH ===================
+    // Touch/Mouse events for 15-second hold
+    clockElement.addEventListener('touchstart', handleTouchStart);
+    clockElement.addEventListener('mousedown', handleTouchStart);
+    
+    clockElement.addEventListener('touchend', handleTouchEnd);
+    clockElement.addEventListener('touchcancel', handleTouchEnd);
+    clockElement.addEventListener('mouseup', handleTouchEnd);
+    clockElement.addEventListener('mouseleave', handleTouchEnd);
+    
+    function handleTouchStart(e) {
+        e.preventDefault();
+        if (isTouching) return;
+        
+        console.log('⏱️ Touch started - 15 second timer initiated');
+        isTouching = true;
+        touchStartTime = Date.now();
+        progressBar.style.width = '0%';
+        
+        // Visual feedback
+        clockElement.style.transform = 'scale(0.98)';
+        clockElement.style.boxShadow = '0 0 40px rgba(102, 126, 234, 0.6)';
+        
+        // Start 15-second timer
+        touchTimer = setTimeout(function() {
+            console.log('✅ 15 seconds completed! Showing edit mode...');
+            
+            // Show edit mode
+            showEditMode();
+            
+            // Reset touch
+            resetTouch();
+            
+        }, REQUIRED_TIME);
+        
+        // Update progress bar
+        progressInterval = setInterval(function() {
+            if (!isTouching) {
+                clearInterval(progressInterval);
+                return;
+            }
+            
+            const elapsed = Date.now() - touchStartTime;
+            const progress = Math.min((elapsed / REQUIRED_TIME) * 100, 100);
+            progressBar.style.width = progress + '%';
+            
+            // Visual feedback based on progress
+            if (progress > 70) {
+                progressBar.style.background = 'rgba(46, 204, 113, 0.6)';
+                clockElement.style.boxShadow = '0 0 50px rgba(46, 204, 113, 0.7)';
+            } else if (progress > 30) {
+                progressBar.style.background = 'rgba(52, 152, 219, 0.5)';
+            }
+            
+            // Complete
+            if (progress >= 100) {
+                clearInterval(progressInterval);
+            }
+        }, 100);
+    }
+    
+    function handleTouchEnd() {
+        if (!isTouching) return;
+        
+        console.log('⏹️ Touch ended');
+        isTouching = false;
+        
+        // Clear timers
+        if (touchTimer) {
+            clearTimeout(touchTimer);
+            touchTimer = null;
+        }
+        
+        if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
+        
+        // Reset visual
+        progressBar.style.width = '0%';
+        progressBar.style.background = 'rgba(255, 255, 255, 0.4)';
+        clockElement.style.transform = '';
+        clockElement.style.boxShadow = '0 20px 40px rgba(0,0,0,0.25)';
+    }
+    
+    function resetTouch() {
+        handleTouchEnd();
+    }
+    
+    // =================== EDIT MODE ===================
+    function showEditMode() {
+        if (!clockEdit) return;
+        
+        // Hide hint
+        document.querySelector('.clock-hint').style.display = 'none';
+        
+        // Show edit mode with animation
+        clockEdit.style.display = 'block';
+        clockEdit.style.animation = 'slideDown 0.5s ease';
+        
+        // Set current time in inputs
+        const timeText = clockElement.querySelector('span').textContent;
+        const [time, ampm] = timeText.split(' ');
+        const [hours, minutes] = time.split(':');
+        
+        editHour.value = parseInt(hours) || '';
+        editMinute.value = parseInt(minutes) || '';
+        editAmPm.value = ampm || 'AM';
+        
+        // Focus on hour input
+        setTimeout(() => editHour.focus(), 100);
+        
+        console.log('⌨️ Enter time 3:43 AM for admin access');
+    }
+    
+    function hideEditMode() {
+        if (clockEdit) {
+            clockEdit.style.display = 'none';
+        }
+        // Show hint again
+        document.querySelector('.clock-hint').style.display = 'block';
+    }
+    
+    // =================== CHECK 3:43 AM ===================
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            const hour = parseInt(editHour.value) || 0;
+            const minute = parseInt(editMinute.value) || 0;
+            const ampm = editAmPm.value;
+            
+            console.log(`⏰ User entered: ${hour}:${minute} ${ampm}`);
+            
+            // Check if time is 3:43 AM
+            if (hour === 3 && minute === 43 && ampm === 'AM') {
+                console.log('✅ Correct time! Redirecting to admin login...');
+                
+                // Success animation
+                clockElement.style.background = 'linear-gradient(135deg, #46c46f 0%, #2ecc71 100%)';
+                clockElement.style.boxShadow = '0 0 60px rgba(46, 204, 113, 0.8)';
+                
+                // Hide edit mode
+                hideEditMode();
+                
+                // Redirect to admin login after 1 second
+                setTimeout(function() {
+                    window.location.href = '/admin-login';
+                }, 1000);
+                
+            } else {
+                console.log('❌ Wrong time. Try 3:43 AM');
+                
+                // Error animation
+                clockElement.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    clockElement.style.animation = '';
+                }, 500);
+                
+                // Hide edit mode
+                hideEditMode();
+                
+                // Show error message
+                alert('Incorrect time. Please enter 3:43 AM for admin access.');
+            }
+        });
+    }
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            hideEditMode();
+        });
+    }
+    
+    // Prevent right-click and text selection
+    clockElement.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    
+    // Enter key support in edit mode
+    document.addEventListener('keydown', function(e) {
+        if (clockEdit.style.display === 'block' && e.key === 'Enter') {
+            if (saveBtn) saveBtn.click();
+        }
+        if (e.key === 'Escape') {
+            if (cancelBtn) cancelBtn.click();
+        }
+    });
+    
+    console.log('✅ Clock initialized - Touch for 15s → Edit mode → Enter 3:43 AM');
+});
+
+// Animation for shake effect
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    .clock-input {
+        font-size: 1.3rem;
+        font-weight: bold;
+        text-align: center;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 10px;
+        transition: all 0.3s;
+    }
+    
+    .clock-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+        outline: none;
+    }
+    
+    .clock-hint {
+        color: #666;
+        font-size: 0.95rem;
+        margin-top: 15px;
+        font-style: italic;
+    }
+    
+    .clock-edit {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        margin-top: 25px;
+        border: 3px solid #667eea;
+    }
+`;
+document.head.appendChild(style);
+</script>
+
+<!-- Remove old clock.js reference -->
+<!-- <script src="/static/js/clock.js"></script> -->
 {% endblock %}
