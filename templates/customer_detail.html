@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.name }} - Customer Details{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-2">
+                <i class="fas fa-user me-2"></i>{{ customer.name }}
+            </h2>
+            <p class="lead mb-0">Customer Details & Order History</p>
+        </div>
+        <a href="/customers" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Customers
+        </a>
+    </div>
+</div>
+
+<!-- Customer Information -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-id-card me-2"></i>Contact Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th><i class="fas fa-user me-1"></i>Username:</th>
+                        <td>{{ customer.username }}</td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-envelope me-1"></i>Email:</th>
+                        <td>{{ customer.email or 'Not provided' }}</td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-phone me-1"></i>Phone:</th>
+                        <td>{{ customer.phone }}</td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-home me-1"></i>Address:</th>
+                        <td>{{ customer.address or 'Not provided' }}</td>
+                    </tr>
+                    <tr>
+                        <th><i class="fas fa-calendar me-1"></i>Joined:</th>
+                        <td>{{ customer.created_at.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Order Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 border rounded">
+                            <h2 class="text-primary">{{ stats.total_orders }}</h2>
+                            <p class="mb-0 text-muted">Total Orders</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 border rounded">
+                            <h2 class="text-success">₹{{ "%.2f"|format(stats.total_spent) }}</h2>
+                            <p class="mb-0 text-muted">Total Spent</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="p-3 border rounded">
+                            <h2 class="text-warning">
+                                {% if stats.last_order_date %}
+                                    {{ stats.last_order_date.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </h2>
+                            <p class="mb-0 text-muted">Last Order</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if stats.total_orders > 0 %}
+                <div class="mt-3">
+                    <h6>Average Order Value:</h6>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-info" 
+                             style="width: {{ (stats.total_spent / stats.total_orders / 1000 * 100) if stats.total_orders > 0 else 0 }}%">
+                            ₹{{ "%.2f"|format(stats.total_spent / stats.total_orders) if stats.total_orders > 0 else 0 }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order History -->
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">
+            <i class="fas fa-history me-2"></i>Order History (Last 50 Orders)
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Service</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Assigned To</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <a href="#" class="text-decoration-none">{{ order.order_number }}</a>
+                        </td>
+                        <td>{{ order.service.name }}</td>
+                        <td>₹{{ "%.2f"|format(order.total_amount) }}</td>
+                        <td>
+                            <span class="badge status-{{ order.status }}">
+                                {{ order.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if order.assigned_to_user %}
+                                {{ order.assigned_to_user.name }}
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            No orders found for this customer
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Session History -->
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-clock me-2"></i>Session History
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Login Time</th>
+                        <th>Logout Time</th>
+                        <th>Duration</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in sessions %}
+                    <tr>
+                        <td>{{ session.login_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            {% if session.logout_time %}
+                                {{ session.logout_time.strftime('%Y-%m-%d %H:%M:%S') }}
+                            {% else %}
+                                <span class="badge bg-warning">Active</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if session.logout_time %}
+                                {{ ((session.logout_time - session.login_time).total_seconds() / 60)|round(1) }} min
+                            {% else %}
+                                In progress
+                            {% endif %}
+                        </td>
+                        <td>{{ session.ip_address or 'N/A' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">No session history</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
