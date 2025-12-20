@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Bite Me Buddy{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    {% if request.query_params.get('type') == 'team' %}
+                        Team Member Login
+                    {% else %}
+                        Customer Login
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form hx-post="/api/login" hx-target="body" hx-push-url="true">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user me-1"></i>Username
+                        </label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock me-1"></i>Password
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    
+                    {% if request.query_params.get('type') == 'team' %}
+                        <input type="hidden" name="user_type" value="team">
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+                        <a href="/" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Back to Home
+                        </a>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <p class="mb-0">
+                            Don't have an account?
+                            <a href="/register" class="text-decoration-none">Register here</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
