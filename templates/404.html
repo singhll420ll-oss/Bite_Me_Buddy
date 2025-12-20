@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - Bite Me Buddy{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <div class="error-container">
+        <i class="fas fa-exclamation-triangle fa-5x text-warning mb-4"></i>
+        <h1 class="display-1 fw-bold">404</h1>
+        <h2 class="mb-4">Page Not Found</h2>
+        <p class="lead mb-4">The page you are looking for doesn't exist or has been moved.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="/" class="btn btn-primary btn-lg">
+                <i class="fas fa-home me-2"></i>Go to Home
+            </a>
+            <a href="javascript:history.back()" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-arrow-left me-2"></i>Go Back
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
