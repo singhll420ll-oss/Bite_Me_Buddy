@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bite Me Buddy{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.6" integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLJWNJaGni" crossorigin="anonymous"></script>
+    
+    <style>
+        :root {
+            --primary-color: #ff6b35;
+            --secondary-color: #f4a261;
+            --accent-color: #2a9d8f;
+            --light-color: #f8f9fa;
+            --dark-color: #264653;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding-top: 20px;
+            padding-bottom: 60px;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--primary-color) !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #e55a2b;
+            border-color: #e55a2b;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .service-card {
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .service-card img {
+            height: 200px;
+            object-fit: cover;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+        
+        .menu-item-card {
+            margin-bottom: 20px;
+        }
+        
+        .menu-item-img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        
+        .cart-item {
+            border-bottom: 1px solid #dee2e6;
+            padding: 10px 0;
+        }
+        
+        .order-card {
+            margin-bottom: 15px;
+        }
+        
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        
+        .status-pending { background-color: #ffc107; color: #000; }
+        .status-confirmed { background-color: #17a2b8; color: #fff; }
+        .status-preparing { background-color: #007bff; color: #fff; }
+        .status-out { background-color: #6c757d; color: #fff; }
+        .status-delivered { background-color: #28a745; color: #fff; }
+        .status-cancelled { background-color: #dc3545; color: #fff; }
+        
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+        
+        .mobile-btn {
+            padding: 20px;
+            font-size: 1.2rem;
+            margin: 10px 0;
+            border-radius: 15px;
+        }
+        
+        .clock-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--dark-color), var(--accent-color));
+            border-radius: 20px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        #realTimeClock {
+            font-family: 'Courier New', monospace;
+            font-size: 4rem;
+            font-weight: bold;
+            letter-spacing: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .clock-edit {
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            #realTimeClock {
+                font-size: 3rem;
+            }
+            
+            .mobile-btn {
+                padding: 15px;
+                font-size: 1rem;
+            }
+            
+            .clock-container {
+                margin: 20px 0;
+                padding: 15px;
+            }
+        }
+        
+        .admin-panel {
+            background-color: var(--dark-color);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .admin-nav {
+            background-color: #343a40;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .admin-nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        
+        .admin-nav a:hover {
+            color: var(--secondary-color);
+        }
+        
+        .report-table {
+            font-size: 0.9rem;
+        }
+        
+        .online-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .online { background-color: #28a745; }
+        .offline { background-color: #dc3545; }
+        
+        .htmx-indicator {
+            opacity: 0;
+            transition: opacity 200ms ease-in;
+        }
+        
+        .htmx-request .htmx-indicator {
+            opacity: 1;
+        }
+        
+        .htmx-request.htmx-indicator {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-utensils me-2"></i>Bite Me Buddy
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user %}
+                        <li class="nav-item">
+                            <span class="nav-link">
+                                <i class="fas fa-user me-1"></i>
+                                {{ current_user.role|title }}
+                            </span>
+                        </li>
+                        {% if current_user.role == 'customer' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="/services">
+                                    <i class="fas fa-concierge-bell me-1"></i>Services
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/myorders">
+                                    <i class="fas fa-history me-1"></i>My Orders
+                                </a>
+                            </li>
+                        {% elif current_user.role == 'team_member' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="/team/dashboard">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                                </a>
+                            </li>
+                        {% elif current_user.role == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="/admin/dashboard">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                                </a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">
+                                <i class="fas fa-sign-out-alt me-1"></i>Logout
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/register">
+                                <i class="fas fa-user-plus me-1"></i>Register
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="container">
+            <p class="mb-0">
+                &copy; 2024 Bite Me Buddy. All rights reserved.
+                <span class="d-none d-md-inline"> | Delivering happiness, one bite at a time.</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="/static/js/main.js"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+  </html>
