@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Services - Bite Me Buddy{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="mb-3">
+        <i class="fas fa-concierge-bell me-2"></i>Our Services
+    </h2>
+    <p class="lead">Choose from our delicious food services</p>
+</div>
+
+<div class="row">
+    {% for service in services %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card service-card" onclick="window.location.href='/services/{{ service.id }}'">
+            {% if service.image_url %}
+            <img src="{{ service.image_url }}" class="card-img-top" alt="{{ service.name }}">
+            {% else %}
+            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="fas fa-utensils fa-4x text-white"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ service.name }}</h5>
+                <p class="card-text">{{ service.description or "Delicious food from our expert chefs" }}</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <button class="btn btn-primary w-100">
+                    View Menu <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            No services available at the moment. Please check back later.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
