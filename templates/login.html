@@ -17,7 +17,10 @@
                 </h4>
             </div>
             <div class="card-body">
-                <form hx-post="/api/login" hx-target="body" hx-push-url="true">
+                <!-- ✅ CHANGED: HTMX removed, JavaScript added -->
+                <form id="loginForm">
+                    <div id="login-message"></div>
+                    
                     <div class="mb-3">
                         <label for="username" class="form-label">
                             <i class="fas fa-user me-1"></i>Username
@@ -33,11 +36,11 @@
                     </div>
                     
                     {% if request.query_params.get('type') == 'team' %}
-                        <input type="hidden" name="user_type" value="team">
+                        <input type="hidden" id="user_type" name="user_type" value="team">
                     {% endif %}
                     
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="loginBtn">
                             <i class="fas fa-sign-in-alt me-2"></i>Login
                         </button>
                         <a href="/" class="btn btn-outline-secondary">
@@ -56,4 +59,103 @@
         </div>
     </div>
 </div>
+
+<!-- ✅ ADDED: JavaScript for proper JSON submission -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const messageDiv = document.getElementById('login-message');
+    
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        // Get form values
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        
+        if (!username || !password) {
+            showMessage('Please enter username and password', 'danger');
+            return;
+        }
+        
+        // Show loading
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...';
+        
+        // Prepare JSON data
+        const loginData = {
+            username: username,
+            password: password
+        };
+        
+        // Add user_type if present
+        const userTypeInput = document.getElementById('user_type');
+        if (userTypeInput) {
+            loginData.user_type = userTypeInput.value;
+        }
+        
+        console.log('Sending login data:', loginData);
+        
+        try {
+            // Send POST request with JSON
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(loginData)
+            });
+            
+            const result = await response.json();
+            console.log('Login response:', result);
+            
+            if (result.success) {
+                showMessage('✅ Login successful! Redirecting...', 'success');
+                
+                // Redirect after 1 second
+                setTimeout(() => {
+                    window.location.href = result.redirect_url || '/services.html';
+                }, 1000);
+                
+            } else {
+                showMessage('❌ ' + (result.error || 'Login failed'), 'danger');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login';
+            }
+            
+        } catch (error) {
+            console.error('Login error:', error);
+            showMessage('❌ Network error. Please try again.', 'danger');
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login';
+        }
+    });
+    
+    function showMessage(message, type) {
+        messageDiv.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+    }
+});
+</script>
+
+<style>
+.alert {
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+#loginBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+</style>
 {% endblock %}
