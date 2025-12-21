@@ -306,7 +306,7 @@ async def simple_register(request: Request) -> JSONResponse:
         return JSONResponse({
             "success": True,
             "message": "Registration successful",
-            "redirect_url": "/services.html",
+            "redirect_url": "/services.html",  # ✅ FIXED: services.html (with 's')
             "user": {
                 "username": data.get('username', 'User'),
                 "phone": data.get('phone', 'N/A')
@@ -316,7 +316,7 @@ async def simple_register(request: Request) -> JSONResponse:
         return JSONResponse({
             "success": True,
             "message": "Registration processed",
-            "redirect_url": "/service.html"
+            "redirect_url": "/services.html"  # ✅ FIXED: services.html (with 's')
         })
 
 
@@ -343,7 +343,8 @@ async def register_health() -> Dict[str, Any]:
             "session_management": True,
             "phone_validation": True,
             "email_optional": True
-        }
+        },
+        "redirects_to": "/services.html"  # ✅ Added for clarity
     }
 
 
@@ -529,11 +530,12 @@ async def _create_success_response(
 ) -> JSONResponse:
     """Create successful registration response"""
     
+    # ✅ FIXED: Changed redirect_url from /service.html to /services.html
     # Build response data
     response_data = {
         "success": True,
         "message": "Registration successful! Welcome to Bite Me Buddy",
-        "redirect_url": "/service.html",
+        "redirect_url": "/services.html",  # ✅ FIXED: services.html (with 's')
         "user": {
             "username": user_data.get("username", "User"),
             "phone": user_data.get("phone", "N/A"),
@@ -595,10 +597,11 @@ async def _create_fallback_response(
     
     logger.info(f"[{request_id}] Using fallback response for: {username}")
     
+    # ✅ FIXED: Changed redirect_url from /service.html to /services.html
     return JSONResponse({
         "success": True,
         "message": "Your registration has been received successfully",
-        "redirect_url": "/service.html",
+        "redirect_url": "/services.html",  # ✅ FIXED: services.html (with 's')
         "user": {
             "username": username,
             "status": "registered",
@@ -616,7 +619,8 @@ def _get_redirect_url_by_role(role: str) -> str:
         "team_member": "/team/dashboard",
         "staff": "/staff/dashboard"
     }
-    return role_redirects.get(role.lower(), "/service.html")
+    # ✅ FIXED: Default redirect to /services.html (with 's')
+    return role_redirects.get(role.lower(), "/services.html")
 
 
 def _set_auth_cookies(
@@ -650,23 +654,4 @@ def _set_auth_cookies(
     )
     
     # Session ID cookie if provided
-    if session_id:
-        response.set_cookie(
-            key="session_id",
-            value=session_id,
-            httponly=True,
-            secure=not settings.DEBUG,
-            samesite="lax",
-            path="/"
-        )
-
-
-# ==================== ERROR HANDLING ====================
-
-class RegistrationError(Exception):
-    """Custom exception for registration errors"""
-    pass
-
-
-@router.exception_handler(RegistrationError)
-asy
+    if session_i
