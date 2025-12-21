@@ -9,10 +9,12 @@ from schemas.schemas import UserCreate, UserRole
 from core.security import get_password_hash
 
 async def create_user(db: AsyncSession, user_data: UserCreate) -> User:
-    """Create new user"""
+    """Create new user - UPDATED VERSION"""
     hashed_password = get_password_hash(user_data.password)
+    
+    # ✅ UPDATED: Use full_name instead of name
     db_user = User(
-        name=user_data.name,
+        name=user_data.full_name,  # Changed from user_data.name
         username=user_data.username,
         email=user_data.email,
         phone=user_data.phone,
@@ -121,4 +123,4 @@ async def get_customer_with_stats(db: AsyncSession, user_id: int):
         "total_orders": stats.total_orders or 0,
         "total_spent": float(stats.total_spent or 0),
         "last_order_date": stats.last_order_date
-  }
+    }
