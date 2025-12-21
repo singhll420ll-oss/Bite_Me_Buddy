@@ -1,137 +1,228 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Bite Me Buddy{% endblock %}
+{% block title %}Login with Mobile - Bite Me Buddy{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">
-                    <i class="fas fa-sign-in-alt me-2"></i>
-                    {% if request.query_params.get('type') == 'team' %}
-                        Team Member Login
-                    {% else %}
-                        Customer Login
-                    {% endif %}
-                </h4>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white text-center py-3">
+                    <h4 class="mb-0">
+                        <i class="fas fa-sign-in-alt me-2"></i>Mobile Login
+                    </h4>
+                    <p class="mb-0 small">Login with your mobile number</p>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Mobile Login Form -->
+                    <form id="mobileLoginForm" method="post" action="/auth/login">
+                        {% csrf_token %}
+                        
+                        <!-- Response Message Container -->
+                        <div id="loginMessage" class="mb-3"></div>
+                        
+                        <!-- Mobile Number -->
+                        <div class="mb-4">
+                            <label for="mobile" class="form-label fw-bold">
+                                <i class="fas fa-mobile-alt me-2"></i>Mobile Number *
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">+91</span>
+                                <input type="tel" 
+                                       class="form-control" 
+                                       id="mobile" 
+                                       name="mobile" 
+                                       placeholder="9876543210" 
+                                       pattern="[6-9]{1}[0-9]{9}" 
+                                       maxlength="10" 
+                                       required
+                                       autocomplete="tel"
+                                       oninput="validateMobile(this)">
+                            </div>
+                            <div class="form-text text-muted">
+                                <small>Enter your registered mobile number</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Password -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label fw-bold">
+                                <i class="fas fa-lock me-2"></i>Password *
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       name="password" 
+                                       placeholder="Enter your password" 
+                                       required
+                                       autocomplete="current-password">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text text-end">
+                                <a href="/auth/forgot-password" class="text-decoration-none">
+                                    <small>Forgot Password?</small>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Remember Me -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me">
+                                <label class="form-check-label" for="rememberMe">
+                                    Remember me on this device
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg" id="loginBtn">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </button>
+                        </div>
+                        
+                        <!-- Registration Link -->
+                        <div class="text-center mt-4 pt-3 border-top">
+                            <p class="mb-0">
+                                Don't have an account?
+                                <a href="/auth/register" class="text-decoration-none fw-bold">Register here</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="card-body">
-                <!-- ✅ CHANGED: HTMX removed, JavaScript added -->
-                <form id="loginForm">
-                    <div id="login-message"></div>
-                    
-                    <div class="mb-3">
-                        <label for="username" class="form-label">
-                            <i class="fas fa-user me-1"></i>Username
-                        </label>
-                        <input type="text" class="form-control" id="username" name="username" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="password" class="form-label">
-                            <i class="fas fa-lock me-1"></i>Password
-                        </label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    
-                    {% if request.query_params.get('type') == 'team' %}
-                        <input type="hidden" id="user_type" name="user_type" value="team">
-                    {% endif %}
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary" id="loginBtn">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
-                        </button>
-                        <a href="/" class="btn btn-outline-secondary">
-                            <i class="fas fa-home me-2"></i>Back to Home
-                        </a>
-                    </div>
-                    
-                    <div class="text-center mt-3">
-                        <p class="mb-0">
-                            Don't have an account?
-                            <a href="/register" class="text-decoration-none">Register here</a>
-                        </p>
-                    </div>
-                </form>
+            
+            <!-- Demo Credentials -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white py-2">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Demo Credentials</h6>
+                </div>
+                <div class="card-body p-3">
+                    <p class="mb-1 small">
+                        <strong>Mobile:</strong> 9876543210
+                    </p>
+                    <p class="mb-0 small">
+                        <strong>Password:</strong> password123
+                    </p>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ✅ ADDED: JavaScript for proper JSON submission -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('loginForm');
+    const form = document.getElementById('mobileLoginForm');
+    const mobileInput = document.getElementById('mobile');
+    const passwordInput = document.getElementById('password');
     const loginBtn = document.getElementById('loginBtn');
-    const messageDiv = document.getElementById('login-message');
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    const messageDiv = document.getElementById('loginMessage');
+    const rememberMe = document.getElementById('rememberMe');
     
+    // Toggle password visibility
+    togglePasswordBtn.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+    });
+    
+    // Check if user data exists in localStorage
+    const savedMobile = localStorage.getItem('last_mobile');
+    if (savedMobile) {
+        mobileInput.value = savedMobile;
+        rememberMe.checked = true;
+    }
+    
+    // Form submit handler
     form.addEventListener('submit', async function(event) {
         event.preventDefault();
         
-        // Get form values
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-        
-        if (!username || !password) {
-            showMessage('Please enter username and password', 'danger');
+        // Validate mobile
+        const mobile = mobileInput.value.trim();
+        if (!/^[6-9]\d{9}$/.test(mobile)) {
+            showMessage('❌ Please enter a valid 10-digit mobile number', 'danger');
+            mobileInput.focus();
             return;
         }
         
-        // Show loading
+        // Validate password
+        const password = passwordInput.value;
+        if (password.length < 1) {
+            showMessage('❌ Please enter your password', 'danger');
+            passwordInput.focus();
+            return;
+        }
+        
+        // Disable button and show loading
         loginBtn.disabled = true;
         loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...';
         
-        // Prepare JSON data
-        const loginData = {
-            username: username,
+        // Prepare data
+        const formData = {
+            mobile: mobile,
             password: password
         };
         
-        // Add user_type if present
-        const userTypeInput = document.getElementById('user_type');
-        if (userTypeInput) {
-            loginData.user_type = userTypeInput.value;
-        }
-        
-        console.log('Sending login data:', loginData);
+        console.log('Login attempt:', { mobile: mobile });
         
         try {
-            // Send POST request with JSON
-            const response = await fetch('/api/login', {
+            // Send to backend
+            const response = await fetch('/auth/login', {
                 method: 'POST',
-                headers: {
+                headers: { 
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
-                body: JSON.stringify(loginData)
+                body: JSON.stringify(formData)
             });
             
             const result = await response.json();
             console.log('Login response:', result);
             
-            if (result.success) {
-                showMessage('✅ Login successful! Redirecting...', 'success');
+            if (response.ok) {
+                // ✅ SUCCESS
+                showMessage('✅ ' + result.message, 'success');
                 
-                // Redirect after 1 second
+                // Save mobile if remember me is checked
+                if (rememberMe.checked) {
+                    localStorage.setItem('last_mobile', mobile);
+                } else {
+                    localStorage.removeItem('last_mobile');
+                }
+                
+                // Store token and user data
+                localStorage.setItem('user_token', result.token.access_token);
+                localStorage.setItem('user_data', JSON.stringify(result.token.user));
+                
+                // Redirect to dashboard after 1 second
                 setTimeout(() => {
-                    window.location.href = result.redirect_url || '/services.html';
+                    window.location.href = '/dashboard';
                 }, 1000);
                 
             } else {
-                showMessage('❌ ' + (result.error || 'Login failed'), 'danger');
+                // ❌ ERROR
+                const errorMsg = result.detail || 'Invalid mobile number or password';
+                showMessage('❌ ' + errorMsg, 'danger');
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login';
+                passwordInput.value = '';
+                passwordInput.focus();
             }
             
         } catch (error) {
             console.error('Login error:', error);
-            showMessage('❌ Network error. Please try again.', 'danger');
+            showMessage('❌ Network error. Please check your connection.', 'danger');
             loginBtn.disabled = false;
             loginBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i>Login';
         }
     });
     
+    // Function to show messages
     function showMessage(message, type) {
         messageDiv.innerHTML = `
             <div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -140,22 +231,105 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
     }
+    
+    // Quick login for demo
+    const demoLogin = document.getElementById('demoLogin');
+    if (demoLogin) {
+        demoLogin.addEventListener('click', function(e) {
+            e.preventDefault();
+            mobileInput.value = '9876543210';
+            passwordInput.value = 'password123';
+            form.dispatchEvent(new Event('submit'));
+        });
+    }
 });
+
+// Mobile validation
+function validateMobile(input) {
+    const value = input.value.replace(/\D/g, '');
+    if (value.length > 10) {
+        input.value = value.substring(0, 10);
+    } else {
+        input.value = value;
+    }
+}
 </script>
 
 <style>
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+}
+
+.input-group-text {
+    border-right: none;
+}
+
+.form-control {
+    border-left: none;
+    padding-left: 5px;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.1);
+    border-color: #a3cfbb;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838, #1aa179);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
 .alert {
+    border-radius: 10px;
     animation: fadeIn 0.3s;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-#loginBtn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+.btn-lg {
+    padding: 12px 24px;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+#togglePassword {
+    border-left: none;
+}
+
+.demo-credentials {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.demo-credentials h6 {
+    color: #0d6efd;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .card-body {
+        padding: 20px !important;
+    }
 }
 </style>
 {% endblock %}
