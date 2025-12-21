@@ -19,7 +19,7 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=True)
     phone = Column(String(20), nullable=False)
     hashed_password = Column(String(255), nullable=False)
-    address = Column(Text, nullable=True)
+    address = Column(Text, nullable=False, default="Not provided")  # ✅ CHANGED: nullable=True → nullable=False
     role = Column(String(20), nullable=False, default='customer')  # 'customer', 'team_member', 'admin'
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
