@@ -1,3 +1,4 @@
+# models/models.py
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, Boolean, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -5,7 +6,24 @@ from datetime import datetime
 import uuid
 from passlib.context import CryptContext
 
-from database import Base
+# ✅ YEH LINE CHANGE KARNA HAI:
+# PURANA: from database import Base
+# NAYA: from ..database import Base
+
+# Try different import approaches
+try:
+    # Option 1: Import from database module
+    from database import Base
+except ImportError:
+    try:
+        # Option 2: Relative import
+        from ..database import Base
+    except ImportError:
+        # Option 3: Define Base here if all else fails
+        from sqlalchemy.orm import DeclarativeBase
+        class Base(DeclarativeBase):
+            pass
+        print("Warning: Using locally defined Base class")
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -18,23 +36,17 @@ class User(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     uuid = Column(String, unique=True, default=generate_uuid, index=True)
-    name = Column(String(100), nullable=True)  # Changed: nullable=True (optional during registration)
-    username = Column(String(50), unique=True, nullable=True, index=True)  # Changed: nullable=True (optional)
-    
-    # ✅ MOBILE AUTHENTICATION FIELDS
-    mobile = Column(String(15), unique=True, nullable=False, index=True)  # ✅ ADDED: Mobile number (required)
+    name = Column(String(100), nullable=True)
+    username = Column(String(50), unique=True, nullable=True, index=True)
+    mobile = Column(String(15), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=True)
-    
-    phone = Column(String(20), nullable=True)  # Changed: nullable=True (redundant with mobile)
-    
-    # ✅ PASSWORD FIELD FOR MOBILE AUTH
-    password = Column(String(255), nullable=False)  # ✅ CHANGED: hashed_password → password
-    
-    address = Column(Text, nullable=True)  # Changed: nullable=True (optional)
-    role = Column(String(20), nullable=False, default='customer')  # 'customer', 'team_member', 'admin'
+    phone = Column(String(20), nullable=True)
+    password = Column(String(255), nullable=False)
+    address = Column(Text, nullable=True)
+    role = Column(String(20), nullable=False, default='customer')
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())  # ✅ ADDED: updated_at field
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
     orders = relationship("Order", back_populates="customer", cascade="all, delete-orphan")
@@ -42,7 +54,6 @@ class User(Base):
     team_member_plans = relationship("TeamMemberPlan", back_populates="team_member", foreign_keys="TeamMemberPlan.team_member_id")
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
     
-    # ✅ PASSWORD VERIFICATION METHOD
     def verify_password(self, plain_password: str) -> bool:
         """Verify password against hashed password"""
         return pwd_context.verify(plain_password, self.password)
@@ -52,7 +63,7 @@ class User(Base):
         self.password = pwd_context.hash(plain_password)
     
     def __repr__(self):
-        return f"<User {self.mobile} ({self.role})>"  # ✅ CHANGED: Show mobile instead of username
+        return f"<User {self.mobile} ({self.role})>"
 
 class Service(Base):
     __tablename__ = "services"
@@ -101,7 +112,7 @@ class Order(Base):
     address = Column(Text, nullable=False)
     phone = Column(String(20), nullable=False)
     special_instructions = Column(Text, nullable=True)
-    status = Column(String(20), nullable=False, default='pending')  # pending, confirmed, preparing, out_for_delivery, delivered, cancelled
+    status = Column(String(20), nullable=False, default='pending')
     assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
     otp = Column(String(4), nullable=True)
     otp_expiry = Column(DateTime(timezone=True), nullable=True)
@@ -125,7 +136,7 @@ class OrderItem(Base):
     order_id = Column(Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
     menu_item_id = Column(Integer, ForeignKey("menu_items.id"), nullable=False)
     quantity = Column(Integer, nullable=False)
-    price_at_order = Column(Float, nullable=False)  # Price at time of order
+    price_at_order = Column(Float, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relationships
