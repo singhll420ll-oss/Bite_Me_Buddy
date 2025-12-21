@@ -306,7 +306,7 @@ async def simple_register(request: Request) -> JSONResponse:
         return JSONResponse({
             "success": True,
             "message": "Registration successful",
-            "redirect_url": "/service.html",
+            "redirect_url": "/services.html",
             "user": {
                 "username": data.get('username', 'User'),
                 "phone": data.get('phone', 'N/A')
