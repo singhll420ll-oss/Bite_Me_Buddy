@@ -4,7 +4,9 @@
 class SecretClock {
     constructor() {
         this.pressTimer = null;
+        this.tapCount = 0;
         this.pressStartTime = null;
+        this.tapHandler = null;
         this.isEditMode = false;
         
         this.initialize();
@@ -76,6 +78,14 @@ class SecretClock {
         this.pressTimer = setTimeout(() => {
             console.log('Long press detected (15 seconds) - Entering edit mode');
             this.enterEditMode();
+            
+            // Clear any existing tap handlers
+            if (this.tapHandler) {
+                document.removeEventListener('click', this.tapHandler);
+                document.removeEventListener('touchend', this.tapHandler);
+                this.tapHandler = null;
+            }
+            this.tapCount = 0;
             
         }, 15000);
     }
