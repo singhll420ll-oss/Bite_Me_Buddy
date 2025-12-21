@@ -50,14 +50,8 @@ async def get_db() -> AsyncSession:
         finally:
             await session.close()
 
-# Import all models (they should inherit from Base)
-# Note: Import models after Base is defined
-from .models import *
-
-# Optional: If you have multiple model files
-# from .user_models import User, Profile
-# from .product_models import Product, Category
-# from .order_models import Order, OrderItem
+# DO NOT import models here - This causes circular import
+# Instead, we'll export Base and other utilities
 
 # Export commonly used items
 __all__ = [
@@ -66,8 +60,5 @@ __all__ = [
     'AsyncSessionLocal',
     'get_db',
     'AsyncSession',
-    # Add your model classes here
-    # 'User',
-    # 'Product',
-    # 'Order',
+    # Model names will be imported separately
 ]
