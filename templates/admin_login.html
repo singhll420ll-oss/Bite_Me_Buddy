@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - Bite Me Buddy{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="fas fa-lock me-2"></i>
+                    Admin Access Portal
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-shield-alt fa-4x text-warning mb-3"></i>
+                    <p class="text-muted">
+                        Restricted Access - Administrative Functions Only
+                    </p>
+                </div>
+                
+                {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+                
+                <form method="POST" action="/auth/login">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user-shield me-1"></i> Admin Username
+                        </label>
+                        <input type="text" class="form-control" id="username" name="username" 
+                               required autofocus>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-key me-1"></i> Admin Password
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" 
+                               required>
+                        <input type="hidden" name="role" value="admin">
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">Remember this device</label>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-unlock me-1"></i> Access Admin Panel
+                        </button>
+                        
+                        <a href="/" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-1"></i> Back to Home
+                        </a>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="alert alert-info small">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <strong>Security Notice:</strong> This portal is for authorized personnel only. 
+                    All activities are logged and monitored.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Features -->
+        <div class="card mt-4 border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                    <i class="fas fa-shield-alt me-1"></i> Security Features
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Two-Factor Authentication Ready
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Session Timeout (30 minutes)
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check text-success me-2"></i>
+                        IP Address Tracking
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Activity Logging
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Security Modal -->
+<div class="modal fade" id="securityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Security Alert
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>You are accessing a restricted administrative system.</p>
+                <div class="alert alert-danger">
+                    <strong>Warning:</strong> Unauthorized access is prohibited and may result 
+                    in legal action. All access attempts are logged.
+                </div>
+                <p class="small text-muted">
+                    By proceeding, you acknowledge that you are an authorized administrator 
+                    of the Bite Me Buddy system.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" data-bs-dismiss="modal">I Understand</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show security modal on page load
+        const securityModal = new bootstrap.Modal(document.getElementById('securityModal'));
+        securityModal.show();
+        
+        // Auto-focus username field
+        document.getElementById('username').focus();
+        
+        // Prevent form submission on Enter key in password field (for demo)
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.querySelector('form').submit();
+            }
+        });
+    });
+</script>
+{% endblock %}
