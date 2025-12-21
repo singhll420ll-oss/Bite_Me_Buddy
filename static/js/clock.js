@@ -1,246 +1,220 @@
-// Real Time Clock with IST - 15 Second Touch + Time Set for Admin
-document.addEventListener('DOMContentLoaded', function() {
-    const clockElement = document.getElementById('realTimeClock');
-    const clockEdit = document.getElementById('clockEdit');
-    const editHour = document.getElementById('editHour');
-    const editMinute = document.getElementById('editMinute');
-    const editAmPm = document.getElementById('editAmPm');
-    const saveBtn = document.getElementById('saveClock');
-    const cancelBtn = document.getElementById('cancelEdit');
+// Bite Me Buddy - Clock and Secret Admin Access Logic
+// MODIFIED: Only 15 second long press required (no taps)
+
+class SecretClock {
+    constructor() {
+        this.pressTimer = null;
+        this.pressStartTime = null;
+        this.isEditMode = false;
+        
+        this.initialize();
+    }
     
-    let touchTimer = null;
-    let progressInterval = null;
-    let isTouching = false;
-    let touchStartTime = 0;
-    const REQUIRED_TIME = 15000; // 15 seconds
+    initialize() {
+        // Update clock immediately and then every second
+        this.updateClock();
+        setInterval(() => this.updateClock(), 1000);
+        
+        // Setup event listeners for secret access
+        this.setupSecretAccess();
+        
+        // Setup edit mode handlers
+        this.setupEditMode();
+    }
     
-    // Update clock every second
-    function updateClock() {
+    updateClock() {
         const now = new Date();
         
-        // Convert to IST (UTC + 5:30)
+        // Convert to IST (UTC+5:30)
         const istOffset = 5.5 * 60 * 60 * 1000;
         const istTime = new Date(now.getTime() + istOffset);
         
-        let hours = istTime.getHours();
-        const minutes = istTime.getMinutes().toString().padStart(2, '0');
-        const seconds = istTime.getSeconds().toString().padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
+        let hours = istTime.getUTCHours();
+        const minutes = istTime.getUTCMinutes().toString().padStart(2, '0');
+        const seconds = istTime.getUTCSeconds().toString().padStart(2, '0');
         
         // Convert to 12-hour format
+        const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12;
-        hours = hours ? hours : 12; // the hour '0' should be '12'
-        hours = hours.toString().padStart(2, '0');
+        hours = hours ? hours : 12; // Convert 0 to 12
         
-        clockElement.textContent = `${hours}:${minutes}:${seconds} ${ampm}`;
+        const timeString = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+        
+        const clockElement = document.getElementById('digitalClock');
+        if (clockElement && !this.isEditMode) {
+            clockElement.textContent = timeString;
+        }
     }
     
-    // Start clock
-    updateClock();
-    setInterval(updateClock, 1000);
-    
-    // ============================================
-    // STEP 1: 15 Second Touch to Show Edit Mode
-    // ============================================
-    
-    // Add visual indicator for touch
-    clockElement.style.cursor = 'pointer';
-    clockElement.style.position = 'relative';
-    clockElement.style.overflow = 'hidden';
-    clockElement.title = 'Touch and hold for 15 seconds to set time';
-    
-    // Create progress bar overlay
-    const progressOverlay = document.createElement('div');
-    progressOverlay.id = 'clock-progress-overlay';
-    progressOverlay.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 0%;
-        height: 100%;
-        background: rgba(52, 152, 219, 0.3);
-        transition: width 0.1s linear;
-        z-index: 1;
-        pointer-events: none;
-        border-radius: inherit;
-    `;
-    clockElement.appendChild(progressOverlay);
-    
-    // Wrap clock text
-    const clockText = clockElement.innerHTML;
-    clockElement.innerHTML = `<div style="position: relative; z-index: 2;">${clockText}</div>`;
-    clockElement.firstChild.before(progressOverlay);
-    
-    // Touch/Mouse events for 15-second hold
-    clockElement.addEventListener('touchstart', handleTouchStart);
-    clockElement.addEventListener('mousedown', handleTouchStart);
-    
-    clockElement.addEventListener('touchend', handleTouchEnd);
-    clockElement.addEventListener('touchcancel', handleTouchEnd);
-    clockElement.addEventListener('mouseup', handleTouchEnd);
-    clockElement.addEventListener('mouseleave', handleTouchEnd);
-    
-    function handleTouchStart(e) {
-        e.preventDefault();
-        if (isTouching) return;
+    setupSecretAccess() {
+        const clockContainer = document.getElementById('clockContainer');
+        if (!clockContainer) return;
         
-        console.log('⏱️ Touch started - 15 second timer initiated');
-        isTouching = true;
-        touchStartTime = Date.now();
-        progressOverlay.style.width = '0%';
+        // Mouse events
+        clockContainer.addEventListener('mousedown', () => this.startPressTimer());
+        clockContainer.addEventListener('mouseup', () => this.cancelPressTimer());
+        clockContainer.addEventListener('mouseleave', () => this.cancelPressTimer());
         
-        // Visual feedback
-        clockElement.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
-        clockElement.style.boxShadow = '0 0 20px rgba(52, 152, 219, 0.3)';
+        // Touch events for mobile
+        clockContainer.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.startPressTimer();
+        });
         
-        // Start 15-second timer
-        touchTimer = setTimeout(function() {
-            console.log('✅ 15 seconds completed! Showing edit mode...');
+        clockContainer.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.cancelPressTimer();
+        });
+        
+        clockContainer.addEventListener('touchcancel', () => this.cancelPressTimer());
+    }
+    
+    startPressTimer() {
+        this.pressStartTime = Date.now();
+        
+        // Long press detection (15 seconds) - MODIFIED: Direct edit mode
+        this.pressTimer = setTimeout(() => {
+            console.log('Long press detected (15 seconds) - Entering edit mode');
+            this.enterEditMode();
             
-            // STEP 1 COMPLETE: Show time edit mode
-            showEditMode();
-            
-            // Reset touch
-            resetTouch();
-            
-        }, REQUIRED_TIME);
+        }, 15000);
+    }
+    
+    cancelPressTimer() {
+        if (this.pressTimer) {
+            clearTimeout(this.pressTimer);
+            this.pressTimer = null;
+        }
+    }
+    
+    enterEditMode() {
+        this.isEditMode = true;
         
-        // Update progress bar
-        progressInterval = setInterval(function() {
-            if (!isTouching) {
-                clearInterval(progressInterval);
+        const clockElement = document.getElementById('digitalClock');
+        const editElement = document.getElementById('clockEdit');
+        
+        if (clockElement && editElement) {
+            clockElement.style.display = 'none';
+            editElement.style.display = 'block';
+            
+            // Set current time in edit fields
+            const now = new Date();
+            const istOffset = 5.5 * 60 * 60 * 1000;
+            const istTime = new Date(now.getTime() + istOffset);
+            
+            let hours = istTime.getUTCHours();
+            const minutes = istTime.getUTCMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            
+            document.getElementById('editHour').value = hours;
+            document.getElementById('editMinute').value = minutes;
+            document.getElementById('editAmPm').value = ampm;
+        }
+    }
+    
+    exitEditMode() {
+        this.isEditMode = false;
+        
+        const clockElement = document.getElementById('digitalClock');
+        const editElement = document.getElementById('clockEdit');
+        
+        if (clockElement && editElement) {
+            clockElement.style.display = 'block';
+            editElement.style.display = 'none';
+        }
+    }
+    
+    setupEditMode() {
+        // Save button handler
+        window.saveClockTime = () => {
+            const hour = parseInt(document.getElementById('editHour').value);
+            const minute = parseInt(document.getElementById('editMinute').value);
+            const ampm = document.getElementById('editAmPm').value;
+            
+            if (!hour || hour < 1 || hour > 12) {
+                this.showMessage('Please enter a valid hour (1-12)', 'error');
                 return;
             }
             
-            const elapsed = Date.now() - touchStartTime;
-            const progress = Math.min((elapsed / REQUIRED_TIME) * 100, 100);
-            progressOverlay.style.width = progress + '%';
-            
-            // Visual feedback based on progress
-            if (progress > 70) {
-                progressOverlay.style.background = 'rgba(46, 204, 113, 0.5)';
-                clockElement.style.boxShadow = '0 0 30px rgba(46, 204, 113, 0.5)';
-            } else if (progress > 30) {
-                progressOverlay.style.background = 'rgba(52, 152, 219, 0.4)';
+            if (!minute || minute < 0 || minute > 59) {
+                this.showMessage('Please enter valid minutes (0-59)', 'error');
+                return;
             }
             
-            // Complete
-            if (progress >= 100) {
-                clearInterval(progressInterval);
-            }
-        }, 100);
-    }
-    
-    function handleTouchEnd() {
-        if (!isTouching) return;
-        
-        console.log('⏹️ Touch ended');
-        isTouching = false;
-        
-        // Clear timers
-        if (touchTimer) {
-            clearTimeout(touchTimer);
-            touchTimer = null;
-        }
-        
-        if (progressInterval) {
-            clearInterval(progressInterval);
-            progressInterval = null;
-        }
-        
-        // Reset visual
-        progressOverlay.style.width = '0%';
-        progressOverlay.style.background = 'rgba(52, 152, 219, 0.3)';
-        clockElement.style.backgroundColor = '';
-        clockElement.style.boxShadow = '';
-    }
-    
-    function resetTouch() {
-        handleTouchEnd();
-    }
-    
-    // ============================================
-    // STEP 2: Show Edit Mode After 15 Seconds
-    // ============================================
-    
-    function showEditMode() {
-        if (!clockEdit) return;
-        
-        // Show edit mode
-        clockEdit.style.display = 'block';
-        
-        // Set current time in inputs
-        const currentTime = clockElement.textContent;
-        const [time, ampm] = currentTime.split(' ');
-        const [hours, minutes] = time.split(':');
-        
-        editHour.value = parseInt(hours);
-        editMinute.value = parseInt(minutes);
-        editAmPm.value = ampm;
-        
-        // Focus on hour input
-        editHour.focus();
-        
-        // Show message (optional)
-        console.log('⌨️ Enter time 3:43 AM for admin access');
-    }
-    
-    function hideEditMode() {
-        if (clockEdit) {
-            clockEdit.style.display = 'none';
-        }
-    }
-    
-    // ============================================
-    // STEP 3: Check for 3:43 AM
-    // ============================================
-    
-    if (saveBtn) {
-        saveBtn.addEventListener('click', function() {
-            const hour = parseInt(editHour.value) || 0;
-            const minute = parseInt(editMinute.value) || 0;
-            const ampm = editAmPm.value;
-            
-            console.log(`⏰ User entered: ${hour}:${minute} ${ampm}`);
-            
-            // Check if time is 3:43 AM
-            if (hour === 3 && minute === 43 && ampm === 'AM') {
-                console.log('✅ Correct time! Redirecting to admin login...');
-                
-                // Hide edit mode
-                hideEditMode();
-                
-                // Redirect to admin login
-                setTimeout(function() {
-                    window.location.href = '/admin-login';
-                }, 500);
-                
+            // Check for secret combination 3:43
+            if (hour === 3 && minute === 43) {
+                console.log('Secret combination 3:43 detected - redirecting to admin login');
+                window.location.href = '/admin-login';
             } else {
-                console.log('❌ Wrong time. Try 3:43 AM');
-                
-                // Hide edit mode
-                hideEditMode();
-                
-                // Optional: Show error message
-                alert('Incorrect time. Please try 3:43 AM');
+                this.exitEditMode();
+                this.showMessage('Time saved', 'info');
             }
-        });
+        };
+        
+        // Cancel button handler
+        window.cancelClockEdit = () => {
+            this.exitEditMode();
+        };
     }
     
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', function() {
-            hideEditMode();
-        });
+    showMessage(message, type) {
+        // Create a temporary message element
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `alert alert-${type === 'error' ? 'danger' : type} position-fixed`;
+        messageDiv.style.cssText = `
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            animation: slideIn 0.3s ease-out;
+        `;
+        messageDiv.textContent = message;
+        
+        document.body.appendChild(messageDiv);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            messageDiv.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 300);
+        }, 3000);
     }
-    
-    // Prevent right-click and text selection
-    clockElement.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        return false;
-    });
-    
-    clockElement.style.userSelect = 'none';
-    clockElement.style.webkitUserSelect = 'none';
-    
-    console.log('✅ Clock initialized - 15 second touch → Time edit → 3:43 AM check');
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new SecretClock();
 });
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
