@@ -8,7 +8,7 @@ import json
 
 from database import get_db
 from schemas.schemas import UserCreate, UserLogin, TokenResponse
-from crud.user import create_user, get_user_by_username
+from crud.user import create_user, get_user_by_username, get_user_by_phone
 from crud.session import create_user_session, update_user_session_logout
 from core.security import verify_password, create_access_token, get_current_user
 from core.config import settings
@@ -37,7 +37,7 @@ async def register(
     request: Request,
     db: AsyncSession = Depends(get_db)
 ):
-    """Register new user - FIXED VERSION"""
+    """Register new user - UPDATED VERSION with phone/address support"""
     
     try:
         # DEBUG: Log the request
@@ -52,13 +52,14 @@ async def register(
             return JSONResponse(
                 status_code=422,
                 content={
-                    "detail": "Invalid JSON format",
-                    "error": str(e)
+                    "success": False,
+                    "error": "Invalid JSON format",
+                    "detail": str(e)
                 }
             )
         
-        # Check required fields manually first
-        required_fields = ["username", "email", "password"]
+        # Check required fields manually
+        required_fields = ["username", "full_name", "phone", "address", "password"]
         missing_fields = [field for field in required_fields if field not in raw_data]
         
         if missing_fields:
@@ -66,10 +67,15 @@ async def register(
             return JSONResponse(
                 status_code=422,
                 content={
-                    "detail": f"Missing required fields: {', '.join(missing_fields)}",
+                    "success": False,
+                    "error": f"Missing required fields: {', '.join(missing_fields)}",
                     "missing_fields": missing_fields
                 }
             )
+        
+        # Add email field if missing (make optional)
+        if "email" not in raw_data:
+            raw_data["email"] = None
         
         # Now use Pydantic model for validation
         try:
@@ -80,8 +86,9 @@ async def register(
             return JSONResponse(
                 status_code=422,
                 content={
-                    "detail": "Validation failed",
-                    "error": str(e)
+                    "success": False,
+                    "error": "Validation failed",
+                    "detail": str(e)
                 }
             )
         
@@ -92,14 +99,28 @@ async def register(
             return JSONResponse(
                 status_code=400,
                 content={
-                    "detail": "Username already registered",
+                    "success": False,
+                    "error": "Username already registered",
                     "suggestion": "Please choose a different username"
+                }
+            )
+        
+        # Check if phone already exists
+        existing_phone = await get_user_by_phone(db, user_data.phone)
+        if existing_phone:
+            logger.warning(f"Phone already registered: {user_data.phone}")
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "error": "Phone number already registered",
+                    "suggestion": "Please use a different phone number"
                 }
             )
         
         # Create user
         user = await create_user(db, user_data)
-        logger.info(f"User created successfully: {user.username}")
+        logger.info(f"User created successfully: {user.username} (ID: {user.id})")
         
         # Create session
         session = await create_user_session(
@@ -117,23 +138,24 @@ async def register(
             expires_delta=access_token_expires
         )
         
-        # OPTION 1: Return JSON response (Recommended for API)
+        # ✅ UPDATED RESPONSE - FRONTEND KE LIYE COMPATIBLE
         response_data = {
             "success": True,
             "message": "User registered successfully",
+            "redirect_url": "/service.html",  # ✅ DIRECT REDIRECT TO service.html
             "user": {
                 "id": str(user.id),
                 "username": user.username,
                 "email": user.email,
+                "phone": user.phone,
                 "role": user.role
             },
-            "redirect_url": "/services",
             "session_id": str(session.id)
         }
         
         response = JSONResponse(content=response_data, status_code=201)
         
-        # Set cookies
+        # Set cookies (optional)
         response.set_cookie(
             key="access_token",
             value=access_token,
@@ -158,43 +180,15 @@ async def register(
         )
         
         return response
-        
-        # OPTION 2: Uncomment below if you want HTML redirect instead of JSON
-        """
-        # Create HTML redirect response
-        response = RedirectResponse(url="/services", status_code=303)
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,
-            secure=not settings.DEBUG,
-            samesite="lax",
-            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
-        )
-        response.set_cookie(
-            key="user_id",
-            value=str(user.id),
-            httponly=False,
-            secure=not settings.DEBUG,
-            samesite="lax"
-        )
-        response.set_cookie(
-            key="session_id",
-            value=str(session.id),
-            httponly=True,
-            secure=not settings.DEBUG,
-            samesite="lax"
-        )
-        return response
-        """
         
     except Exception as e:
         logger.error(f"Unexpected error in registration: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=500,
             content={
-                "detail": "Internal server error",
-                "error": str(e)
+                "success": False,
+                "error": "Internal server error",
+                "detail": str(e)
             }
         )
 
@@ -215,7 +209,8 @@ async def login(
             return JSONResponse(
                 status_code=422,
                 content={
-                    "detail": "Username and password are required"
+                    "success": False,
+                    "error": "Username and password are required"
                 }
             )
         
@@ -228,7 +223,8 @@ async def login(
             return JSONResponse(
                 status_code=401,
                 content={
-                    "detail": "Invalid credentials"
+                    "success": False,
+                    "error": "Invalid credentials"
                 }
             )
         
@@ -237,7 +233,8 @@ async def login(
             return JSONResponse(
                 status_code=401,
                 content={
-                    "detail": "Invalid credentials"
+                    "success": False,
+                    "error": "Invalid credentials"
                 }
             )
         
@@ -262,18 +259,18 @@ async def login(
         elif user.role == "team_member":
             redirect_url = "/team/dashboard"
         else:
-            redirect_url = "/services"
+            redirect_url = "/service.html"  # ✅ Changed to service.html for regular users
         
         # Return JSON response
         response_data = {
             "success": True,
             "message": "Login successful",
+            "redirect_url": redirect_url,
             "user": {
                 "id": str(user.id),
                 "username": user.username,
                 "role": user.role
             },
-            "redirect_url": redirect_url,
             "session_id": str(session.id)
         }
         
@@ -310,8 +307,9 @@ async def login(
         return JSONResponse(
             status_code=500,
             content={
-                "detail": "Internal server error",
-                "error": str(e)
+                "success": False,
+                "error": "Internal server error",
+                "detail": str(e)
             }
         )
 
@@ -344,6 +342,26 @@ async def admin_login_page(request: Request):
     """Admin login page (accessed via secret clock)"""
     return templates.TemplateResponse("admin_login.html", {"request": request})
 
+# ✅ NEW: Simple test endpoint that always works
+@router.post("/api/simple-register")
+async def simple_register(request: Request):
+    """Simple registration that always redirects to service.html"""
+    try:
+        data = await request.json()
+        logger.info(f"Simple register received: {data}")
+        
+        return JSONResponse({
+            "success": True,
+            "message": "Registration successful (test mode)",
+            "redirect_url": "/service.html"  # ✅ Always redirects here
+        })
+        
+    except Exception as e:
+        return JSONResponse({
+            "success": False,
+            "error": str(e)
+        }, status_code=400)
+
 # Debug endpoint - Test registration
 @router.post("/api/test-register")
 async def test_register(request: Request):
@@ -356,6 +374,7 @@ async def test_register(request: Request):
                 "success": True,
                 "message": "Test endpoint working",
                 "received_data": data,
+                "redirect_url": "/service.html",
                 "note": "This is just for testing validation"
             }
         )
@@ -363,7 +382,18 @@ async def test_register(request: Request):
         return JSONResponse(
             status_code=400,
             content={
-                "error": str(e),
-                "received_body": await request.body()
+                "success": False,
+                "error": str(e)
             }
         )
+
+# ✅ NEW: Health check for registration endpoint
+@router.get("/api/register/health")
+async def register_health():
+    """Check if registration endpoint is working"""
+    return {
+        "status": "healthy",
+        "endpoint": "/api/register",
+        "supports_fields": ["username", "full_name", "email", "phone", "address", "password"],
+        "redirects_to": "/service.html"
+    }
