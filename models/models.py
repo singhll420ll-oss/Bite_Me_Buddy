@@ -3,8 +3,12 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from datetime import datetime
 import uuid
+from passlib.context import CryptContext
 
 from database import Base
+
+# Password hashing context
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -14,15 +18,23 @@ class User(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     uuid = Column(String, unique=True, default=generate_uuid, index=True)
-    name = Column(String(100), nullable=False)
-    username = Column(String(50), unique=True, nullable=False, index=True)
+    name = Column(String(100), nullable=True)  # Changed: nullable=True (optional during registration)
+    username = Column(String(50), unique=True, nullable=True, index=True)  # Changed: nullable=True (optional)
+    
+    # ✅ MOBILE AUTHENTICATION FIELDS
+    mobile = Column(String(15), unique=True, nullable=False, index=True)  # ✅ ADDED: Mobile number (required)
     email = Column(String(100), unique=True, nullable=True)
-    phone = Column(String(20), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    address = Column(Text, nullable=False, default="Not provided")  # ✅ CHANGED: nullable=True → nullable=False
+    
+    phone = Column(String(20), nullable=True)  # Changed: nullable=True (redundant with mobile)
+    
+    # ✅ PASSWORD FIELD FOR MOBILE AUTH
+    password = Column(String(255), nullable=False)  # ✅ CHANGED: hashed_password → password
+    
+    address = Column(Text, nullable=True)  # Changed: nullable=True (optional)
     role = Column(String(20), nullable=False, default='customer')  # 'customer', 'team_member', 'admin'
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())  # ✅ ADDED: updated_at field
     
     # Relationships
     orders = relationship("Order", back_populates="customer", cascade="all, delete-orphan")
@@ -30,8 +42,17 @@ class User(Base):
     team_member_plans = relationship("TeamMemberPlan", back_populates="team_member", foreign_keys="TeamMemberPlan.team_member_id")
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
     
+    # ✅ PASSWORD VERIFICATION METHOD
+    def verify_password(self, plain_password: str) -> bool:
+        """Verify password against hashed password"""
+        return pwd_context.verify(plain_password, self.password)
+    
+    def set_password(self, plain_password: str):
+        """Hash and set password"""
+        self.password = pwd_context.hash(plain_password)
+    
     def __repr__(self):
-        return f"<User {self.username} ({self.role})>"
+        return f"<User {self.mobile} ({self.role})>"  # ✅ CHANGED: Show mobile instead of username
 
 class Service(Base):
     __tablename__ = "services"
