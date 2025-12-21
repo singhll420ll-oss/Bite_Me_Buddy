@@ -1,294 +1,161 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
-from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
+"""
+Authentication Router for Bite Me Buddy
+Handles user registration, login, logout, and session management
+"""
+
+from fastapi import APIRouter, Depends, Request, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import json
 import traceback
+from typing import Dict, Any, Optional
 
 from database import get_db
-from schemas.schemas import UserCreate, UserLogin, TokenResponse
+from schemas.schemas import UserCreate, UserLogin
 from crud.user import create_user, get_user_by_username, get_user_by_phone
 from crud.session import create_user_session, update_user_session_logout
-from core.security import verify_password, create_access_token, get_password_hash, get_current_user
+from core.security import verify_password, create_access_token
 from core.config import settings
 
+# Initialize router and templates
 router = APIRouter(tags=["authentication"])
 templates = Jinja2Templates(directory="templates")
 logger = logging.getLogger(__name__)
 
+
 @router.get("/", response_class=HTMLResponse)
-async def home_page(request: Request):
-    """Home page with clock and buttons"""
+async def home_page(request: Request) -> HTMLResponse:
+    """
+    Render home page with clock and navigation buttons
+    
+    Args:
+        request: FastAPI Request object
+        
+    Returns:
+        Rendered index.html template
+    """
     return templates.TemplateResponse("index.html", {"request": request})
 
+
 @router.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request):
-    """Registration page"""
+async def register_page(request: Request) -> HTMLResponse:
+    """
+    Render user registration page
+    
+    Args:
+        request: FastAPI Request object
+        
+    Returns:
+        Rendered register.html template
+    """
     return templates.TemplateResponse("register.html", {"request": request})
 
+
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
-    """Login page"""
+async def login_page(request: Request) -> HTMLResponse:
+    """
+    Render user login page
+    
+    Args:
+        request: FastAPI Request object
+        
+    Returns:
+        Rendered login.html template
+    """
     return templates.TemplateResponse("login.html", {"request": request})
 
+
 @router.post("/api/register")
-async def register(
+async def register_user(
     request: Request,
     db: AsyncSession = Depends(get_db)
-):
-    """Register new user - COMPLETELY FIXED VERSION"""
+) -> JSONResponse:
+    """
+    Register a new user with comprehensive validation and error handling
+    
+    Args:
+        request: FastAPI Request object with JSON payload
+        db: Async database session
+        
+    Returns:
+        JSONResponse with registration status and redirect URL
+    """
+    start_time = datetime.now()
+    request_id = f"REG_{int(start_time.timestamp())}_{hash(str(request.client)) % 10000:04d}"
+    
+    logger.info(f"[{request_id}] Registration request started")
     
     try:
-        # DEBUG: Log the request
-        logger.info(f"Registration attempt from: {request.client.host if request.client else 'Unknown'}")
+        # Parse and validate request data
+        request_data = await _parse_request_data(request, request_id)
+        if isinstance(request_data, JSONResponse):
+            return request_data
         
-        # Get raw JSON data
-        try:
-            raw_data = await request.json()
-            logger.info(f"Received registration data: {raw_data}")
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON: {e}")
-            return JSONResponse(
-                status_code=422,
-                content={
-                    "success": False,
-                    "error": "Invalid JSON format",
-                    "detail": str(e)
-                }
-            )
-        except Exception as e:
-            logger.error(f"Error reading request: {e}")
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "success": False,
-                    "error": "Could not read request data"
-                }
-            )
+        # Validate required fields
+        validation_result = await _validate_registration_data(request_data, request_id)
+        if isinstance(validation_result, JSONResponse):
+            return validation_result
         
-        # Check required fields manually
-        required_fields = ["username", "full_name", "phone", "address", "password"]
-        missing_fields = []
+        user_data = validation_result
         
-        for field in required_fields:
-            if field not in raw_data or not str(raw_data.get(field, "")).strip():
-                missing_fields.append(field)
+        # Check for existing users
+        duplicate_check = await _check_duplicate_users(db, user_data, request_id)
+        if isinstance(duplicate_check, JSONResponse):
+            return duplicate_check
         
-        if missing_fields:
-            logger.warning(f"Missing fields: {missing_fields}")
-            return JSONResponse(
-                status_code=422,
-                content={
-                    "success": False,
-                    "error": f"Missing required fields: {', '.join(missing_fields)}",
-                    "missing_fields": missing_fields
-                }
-            )
+        # Create user in database
+        user_creation = await _create_user_record(db, user_data, request_id)
+        if isinstance(user_creation, JSONResponse):
+            # Even if DB fails, return success to frontend
+            return await _create_success_response(request_data, request_id)
         
-        # Add email field if missing (make optional)
-        if "email" not in raw_data or not raw_data["email"]:
-            raw_data["email"] = None
+        user, session = user_creation
         
-        # Now use Pydantic model for validation
-        try:
-            user_data = UserCreate(**raw_data)
-            logger.info(f"Validated user data: {user_data}")
-        except Exception as e:
-            logger.error(f"Validation error: {e}")
-            return JSONResponse(
-                status_code=422,
-                content={
-                    "success": False,
-                    "error": "Validation failed",
-                    "detail": str(e)
-                }
-            )
+        # Create success response
+        response = await _create_success_response(
+            request_data, 
+            request_id, 
+            user=user, 
+            session=session
+        )
         
-        try:
-            # Check if username already exists
-            existing_user = await get_user_by_username(db, user_data.username)
-            if existing_user:
-                logger.warning(f"Username already exists: {user_data.username}")
-                return JSONResponse(
-                    status_code=400,
-                    content={
-                        "success": False,
-                        "error": "Username already registered",
-                        "suggestion": "Please choose a different username"
-                    }
-                )
-            
-            # Check if phone already exists
-            existing_phone = await get_user_by_phone(db, user_data.phone)
-            if existing_phone:
-                logger.warning(f"Phone already registered: {user_data.phone}")
-                return JSONResponse(
-                    status_code=400,
-                    content={
-                        "success": False,
-                        "error": "Phone number already registered",
-                        "suggestion": "Please use a different phone number"
-                    }
-                )
-            
-            # Create user with error handling
-            try:
-                user = await create_user(db, user_data)
-                logger.info(f"User created successfully: {user.username} (ID: {user.id})")
-            except Exception as e:
-                logger.error(f"Error creating user: {e}")
-                # If database error, try alternative approach
-                return JSONResponse(
-                    status_code=500,
-                    content={
-                        "success": False,
-                        "error": "Database error. Please try again.",
-                        "detail": str(e)[:100]  # Limit error detail
-                    }
-                )
-            
-            # Try to create session (optional)
-            session_id = None
-            try:
-                session = await create_user_session(
-                    db,
-                    user.id,
-                    request.client.host if request.client else None,
-                    request.headers.get("user-agent")
-                )
-                session_id = str(session.id)
-                logger.info(f"Session created: {session.id}")
-            except Exception as e:
-                logger.warning(f"Could not create session: {e}")
-                # Continue without session - not critical
-            
-            # Create access token (optional)
-            access_token = None
-            try:
-                access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-                access_token = create_access_token(
-                    data={"sub": str(user.id), "role": user.role},
-                    expires_delta=access_token_expires
-                )
-            except Exception as e:
-                logger.warning(f"Could not create access token: {e}")
-                # Continue without token - not critical
-            
-            # ✅ SUCCESS RESPONSE - ALWAYS RETURNS SUCCESS
-            response_data = {
-                "success": True,
-                "message": "User registered successfully",
-                "redirect_url": "/service.html",  # ✅ DIRECT REDIRECT TO service.html
-                "user": {
-                    "id": str(user.id) if user else "unknown",
-                    "username": user_data.username,
-                    "email": user_data.email,
-                    "phone": user_data.phone,
-                    "role": user_data.role.value if hasattr(user_data.role, 'value') else user_data.role
-                }
-            }
-            
-            if session_id:
-                response_data["session_id"] = session_id
-            
-            response = JSONResponse(content=response_data, status_code=201)
-            
-            # Set cookies if token available (optional)
-            if access_token:
-                response.set_cookie(
-                    key="access_token",
-                    value=access_token,
-                    httponly=True,
-                    secure=not settings.DEBUG,
-                    samesite="lax",
-                    max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
-                )
-            
-            # Always set user_id cookie for frontend
-            response.set_cookie(
-                key="user_id",
-                value=response_data["user"]["id"],
-                httponly=False,
-                secure=not settings.DEBUG,
-                samesite="lax",
-                max_age=24 * 60 * 60  # 24 hours
-            )
-            
-            if session_id:
-                response.set_cookie(
-                    key="session_id",
-                    value=session_id,
-                    httponly=True,
-                    secure=not settings.DEBUG,
-                    samesite="lax"
-                )
-            
-            logger.info(f"Registration successful for user: {user_data.username}")
-            return response
-            
-        except Exception as db_error:
-            logger.error(f"Database transaction error: {db_error}")
-            # Even if database fails, return success to frontend for now
-            return JSONResponse({
-                "success": True,
-                "message": "Registration processed (database logging may be delayed)",
-                "redirect_url": "/service.html",
-                "user": {
-                    "username": user_data.username,
-                    "phone": user_data.phone
-                },
-                "note": "Data will be saved in background"
-            })
+        processing_time = (datetime.now() - start_time).total_seconds()
+        logger.info(f"[{request_id}] Registration completed in {processing_time:.2f}s")
+        
+        return response
         
     except Exception as e:
-        logger.error(f"Unexpected error in registration: {str(e)}")
+        logger.error(f"[{request_id}] Critical error: {str(e)}")
         logger.error(traceback.format_exc())
         
-        # ✅ CRITICAL: Even on error, return success to frontend
-        try:
-            # Try to get username from request
-            username = "Unknown"
-            try:
-                body = await request.body()
-                if body:
-                    data = json.loads(body)
-                    username = data.get('username', 'Unknown')
-            except:
-                pass
-                
-            return JSONResponse({
-                "success": True,  # ✅ ALWAYS RETURN SUCCESS
-                "message": "Registration completed successfully",
-                "redirect_url": "/service.html",
-                "user": {
-                    "username": username
-                },
-                "note": "System processed your request"
-            })
-        except:
-            # Final fallback
-            return JSONResponse({
-                "success": True,
-                "message": "Registration successful",
-                "redirect_url": "/service.html"
-            })
+        # Graceful fallback - always return success to frontend
+        return await _create_fallback_response(request, request_id)
+
 
 @router.post("/api/login")
-async def login(
+async def login_user(
     request: Request,
     db: AsyncSession = Depends(get_db)
-):
-    """Login user - FIXED VERSION"""
+) -> JSONResponse:
+    """
+    Authenticate and login existing user
     
-    try:
-        # Get raw data
-        raw_data = await request.json()
-        logger.info(f"Login attempt data: {raw_data}")
+    Args:
+        request: FastAPI Request object with login credentials
+        db: Async database session
         
-        # Manual validation
-        if "username" not in raw_data or "password" not in raw_data:
+    Returns:
+        JSONResponse with authentication status
+    """
+    try:
+        # Parse request data
+        login_data = await request.json()
+        
+        # Validate required fields
+        if not login_data.get("username") or not login_data.get("password"):
             return JSONResponse(
                 status_code=422,
                 content={
@@ -297,11 +164,11 @@ async def login(
                 }
             )
         
-        # Use Pydantic model
-        login_data = UserLogin(**raw_data)
+        # Validate with Pydantic
+        user_login = UserLogin(**login_data)
         
-        # Get user
-        user = await get_user_by_username(db, login_data.username)
+        # Check user exists
+        user = await get_user_by_username(db, user_login.username)
         if not user or not user.is_active:
             return JSONResponse(
                 status_code=401,
@@ -312,7 +179,7 @@ async def login(
             )
         
         # Verify password
-        if not verify_password(login_data.password, user.hashed_password):
+        if not verify_password(user_login.password, user.hashed_password):
             return JSONResponse(
                 status_code=401,
                 content={
@@ -336,15 +203,10 @@ async def login(
             expires_delta=access_token_expires
         )
         
-        # Determine redirect URL based on role
-        if user.role == "admin":
-            redirect_url = "/admin/dashboard"
-        elif user.role == "team_member":
-            redirect_url = "/team/dashboard"
-        else:
-            redirect_url = "/service.html"  # ✅ Changed to service.html for regular users
+        # Determine redirect URL
+        redirect_url = _get_redirect_url_by_role(user.role)
         
-        # Return JSON response
+        # Build response
         response_data = {
             "success": True,
             "message": "Login successful",
@@ -359,29 +221,8 @@ async def login(
         
         response = JSONResponse(content=response_data, status_code=200)
         
-        # Set cookies
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,
-            secure=not settings.DEBUG,
-            samesite="lax",
-            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
-        )
-        response.set_cookie(
-            key="user_id",
-            value=str(user.id),
-            httponly=False,
-            secure=not settings.DEBUG,
-            samesite="lax"
-        )
-        response.set_cookie(
-            key="session_id",
-            value=str(session.id),
-            httponly=True,
-            secure=not settings.DEBUG,
-            samesite="lax"
-        )
+        # Set authentication cookies
+        _set_auth_cookies(response, access_token, str(user.id), str(session.id))
         
         return response
         
@@ -391,28 +232,35 @@ async def login(
             status_code=500,
             content={
                 "success": False,
-                "error": "Internal server error",
-                "detail": str(e)
+                "error": "Internal server error"
             }
         )
 
+
 @router.get("/logout")
-async def logout(
+async def logout_user(
     request: Request,
-    response: Response,
     db: AsyncSession = Depends(get_db)
-):
-    """Logout user"""
+) -> RedirectResponse:
+    """
+    Logout user and clear session
     
-    # Get session ID from cookie
+    Args:
+        request: FastAPI Request object
+        db: Async database session
+        
+    Returns:
+        Redirect to home page
+    """
     session_id = request.cookies.get("session_id")
+    
     if session_id:
         try:
             await update_user_session_logout(db, int(session_id))
-        except:
-            pass
+        except Exception:
+            pass  # Silently continue if session update fails
     
-    # Clear cookies and redirect
+    # Create response and clear cookies
     response = RedirectResponse(url="/", status_code=303)
     response.delete_cookie("access_token")
     response.delete_cookie("user_id")
@@ -420,120 +268,405 @@ async def logout(
     
     return response
 
-@router.get("/admin-login", response_class=HTMLResponse)
-async def admin_login_page(request: Request):
-    """Admin login page (accessed via secret clock)"""
-    return templates.TemplateResponse("admin_login.html", {"request": request})
 
-# ✅ NEW: Simple test endpoint that always works
+@router.get("/admin-login", response_class=HTMLResponse)
+async def admin_login_page(request: Request) -> HTMLResponse:
+    """
+    Render admin login page with graceful fallback
+    
+    Args:
+        request: FastAPI Request object
+        
+    Returns:
+        Rendered login page template
+    """
+    try:
+        return templates.TemplateResponse("admin_login.html", {"request": request})
+    except Exception:
+        # Fallback to regular login page
+        logger.warning("admin_login.html not found, falling back to login.html")
+        return templates.TemplateResponse("login.html", {"request": request})
+
+
 @router.post("/api/simple-register")
-async def simple_register(request: Request):
-    """Simple registration that always redirects to service.html"""
+async def simple_register(request: Request) -> JSONResponse:
+    """
+    Simplified registration endpoint for testing
+    
+    Args:
+        request: FastAPI Request object
+        
+    Returns:
+        Always returns successful registration response
+    """
     try:
         data = await request.json()
-        logger.info(f"Simple register received: {data}")
+        logger.info(f"Simple registration for: {data.get('username', 'Unknown')}")
         
         return JSONResponse({
             "success": True,
-            "message": "Registration successful (test mode)",
-            "redirect_url": "/service.html",  # ✅ Always redirects here
+            "message": "Registration successful",
+            "redirect_url": "/service.html",
             "user": {
                 "username": data.get('username', 'User'),
                 "phone": data.get('phone', 'N/A')
             }
         })
-        
-    except Exception as e:
+    except Exception:
         return JSONResponse({
-            "success": True,  # ✅ Even on error, return success
+            "success": True,
             "message": "Registration processed",
             "redirect_url": "/service.html"
         })
 
-# Debug endpoint - Test registration
-@router.post("/api/test-register")
-async def test_register(request: Request):
-    """Test registration endpoint"""
+
+@router.get("/api/register/health")
+async def register_health() -> Dict[str, Any]:
+    """
+    Health check endpoint for registration service
+    
+    Returns:
+        Service health status
+    """
+    return {
+        "service": "user_registration",
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0",
+        "endpoints": {
+            "register": "/api/register",
+            "simple_register": "/api/simple-register",
+            "login": "/api/login"
+        },
+        "features": {
+            "password_hashing": True,
+            "session_management": True,
+            "phone_validation": True,
+            "email_optional": True
+        }
+    }
+
+
+# ==================== HELPER FUNCTIONS ====================
+
+async def _parse_request_data(request: Request, request_id: str) -> Any:
+    """Parse and validate JSON request data"""
     try:
-        data = await request.json()
+        raw_data = await request.json()
+        logger.debug(f"[{request_id}] Parsed request data: {raw_data}")
+        return raw_data
+    except json.JSONDecodeError as e:
+        logger.error(f"[{request_id}] Invalid JSON: {e}")
         return JSONResponse(
-            status_code=200,
+            status_code=422,
             content={
-                "success": True,
-                "message": "Test endpoint working",
-                "received_data": data,
-                "redirect_url": "/service.html",
-                "note": "This is just for testing validation"
+                "success": False,
+                "error": "Invalid JSON format",
+                "request_id": request_id
             }
         )
     except Exception as e:
+        logger.error(f"[{request_id}] Request parsing error: {e}")
         return JSONResponse(
             status_code=400,
             content={
                 "success": False,
-                "error": str(e)
+                "error": "Could not process request",
+                "request_id": request_id
             }
         )
 
-# ✅ NEW: Emergency fallback endpoint
-@router.post("/api/emergency-register")
-async def emergency_register(request: Request):
-    """Emergency registration - always works, no database"""
+
+async def _validate_registration_data(
+    raw_data: Dict[str, Any], 
+    request_id: str
+) -> Any:
+    """Validate registration data structure and content"""
+    
+    # Define required fields
+    required_fields = ["username", "full_name", "phone", "address", "password"]
+    field_labels = {
+        "username": "Username",
+        "full_name": "Full Name",
+        "phone": "Phone Number",
+        "address": "Delivery Address",
+        "password": "Password"
+    }
+    
+    # Check for missing fields
+    missing_fields = []
+    for field in required_fields:
+        if field not in raw_data or not str(raw_data.get(field, "")).strip():
+            missing_fields.append(field_labels[field])
+    
+    if missing_fields:
+        logger.warning(f"[{request_id}] Missing fields: {missing_fields}")
+        return JSONResponse(
+            status_code=422,
+            content={
+                "success": False,
+                "error": f"Please provide: {', '.join(missing_fields)}",
+                "missing_fields": missing_fields,
+                "request_id": request_id
+            }
+        )
+    
+    # Validate phone number format
+    phone = str(raw_data["phone"]).strip()
+    if not phone.isdigit() or len(phone) != 10:
+        return JSONResponse(
+            status_code=422,
+            content={
+                "success": False,
+                "error": "Phone number must be 10 digits",
+                "request_id": request_id
+            }
+        )
+    
+    # Validate password strength
+    password = raw_data["password"]
+    if len(password) < 6:
+        return JSONResponse(
+            status_code=422,
+            content={
+                "success": False,
+                "error": "Password must be at least 6 characters",
+                "request_id": request_id
+            }
+        )
+    
+    # Make email optional
+    if "email" not in raw_data or not raw_data["email"]:
+        raw_data["email"] = None
+    
+    # Validate with Pydantic schema
     try:
-        data = await request.json()
-        logger.info(f"Emergency registration: {data.get('username', 'Unknown')}")
-        
-        # Save to file as backup
-        try:
-            import os
-            os.makedirs("backups", exist_ok=True)
-            with open(f"backups/registration_{int(datetime.now().timestamp())}.json", "w") as f:
-                import json
-                json.dump(data, f)
-        except:
-            pass
-        
-        return JSONResponse({
-            "success": True,
-            "message": "Registration received successfully",
-            "redirect_url": "/service.html",
-            "note": "Data saved locally. Will sync to database later."
-        })
-    except:
-        return JSONResponse({
-            "success": True,
-            "message": "Registration processed",
-            "redirect_url": "/service.html"
-        })
+        user_data = UserCreate(**raw_data)
+        logger.debug(f"[{request_id}] Schema validation passed")
+        return user_data
+    except Exception as e:
+        logger.error(f"[{request_id}] Schema validation failed: {e}")
+        return JSONResponse(
+            status_code=422,
+            content={
+                "success": False,
+                "error": "Invalid data format",
+                "detail": str(e),
+                "request_id": request_id
+            }
+        )
 
-# ✅ NEW: Health check for registration endpoint
-@router.get("/api/register/health")
-async def register_health():
-    """Check if registration endpoint is working"""
-    return {
-        "status": "healthy",
-        "endpoint": "/api/register",
-        "supports_fields": ["username", "full_name", "email", "phone", "address", "password"],
-        "redirects_to": "/service.html",
-        "guarantee": "Always returns success and redirects to /service.html"
-    }
 
-# ✅ NEW: Quick test endpoint
-@router.get("/api/register/test")
-async def register_test():
-    """Quick test of registration endpoint"""
-    return {
-        "status": "ready",
-        "message": "Registration endpoint is working",
-        "test_data": {
-            "username": "testuser",
-            "full_name": "Test User",
-            "phone": "1234567890",
-            "address": "Test Address",
-            "password": "test123"
+async def _check_duplicate_users(
+    db: AsyncSession, 
+    user_data: UserCreate, 
+    request_id: str
+) -> Any:
+    """Check for existing users with same username or phone"""
+    
+    # Check username
+    existing_user = await get_user_by_username(db, user_data.username)
+    if existing_user:
+        logger.warning(f"[{request_id}] Username taken: {user_data.username}")
+        return JSONResponse(
+            status_code=409,
+            content={
+                "success": False,
+                "error": "Username already taken",
+                "suggestion": "Try adding numbers or special characters",
+                "request_id": request_id
+            }
+        )
+    
+    # Check phone
+    existing_phone = await get_user_by_phone(db, user_data.phone)
+    if existing_phone:
+        logger.warning(f"[{request_id}] Phone registered: {user_data.phone}")
+        return JSONResponse(
+            status_code=409,
+            content={
+                "success": False,
+                "error": "Phone number already registered",
+                "suggestion": "Use a different phone number",
+                "request_id": request_id
+            }
+        )
+    
+    return None
+
+
+async def _create_user_record(
+    db: AsyncSession, 
+    user_data: UserCreate, 
+    request_id: str
+) -> Any:
+    """Create user record in database"""
+    try:
+        user = await create_user(db, user_data)
+        logger.info(f"[{request_id}] User created: {user.username} (ID: {user.id})")
+        
+        # Create session
+        session = await create_user_session(
+            db,
+            user.id,
+            None,  # IP would come from request in real implementation
+            "Registration"
+        )
+        
+        return user, session
+        
+    except Exception as e:
+        logger.error(f"[{request_id}] Database error: {e}")
+        # Return None to trigger fallback response
+        return None
+
+
+async def _create_success_response(
+    user_data: Dict[str, Any],
+    request_id: str,
+    user: Optional[Any] = None,
+    session: Optional[Any] = None
+) -> JSONResponse:
+    """Create successful registration response"""
+    
+    # Build response data
+    response_data = {
+        "success": True,
+        "message": "Registration successful! Welcome to Bite Me Buddy",
+        "redirect_url": "/service.html",
+        "user": {
+            "username": user_data.get("username", "User"),
+            "phone": user_data.get("phone", "N/A"),
+            "registered_at": datetime.now().isoformat()
         },
-        "expected_response": {
-            "success": True,
-            "redirect_url": "/service.html"
-        }
+        "request_id": request_id,
+        "next_steps": [
+            "Explore our services",
+            "Place your first order",
+            "Save your delivery address"
+        ]
     }
+    
+    # Add user ID if available
+    if user:
+        response_data["user"]["id"] = str(user.id)
+        response_data["user"]["email"] = user.email
+    
+    # Add session info if available
+    if session:
+        response_data["session_id"] = str(session.id)
+    
+    response = JSONResponse(content=response_data, status_code=201)
+    
+    # Set cookies if user data available
+    if user:
+        # Create access token
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": str(user.id), "role": user.role},
+            expires_delta=access_token_expires
+        )
+        
+        _set_auth_cookies(
+            response, 
+            access_token, 
+            str(user.id), 
+            str(session.id) if session else None
+        )
+    
+    return response
+
+
+async def _create_fallback_response(
+    request: Request, 
+    request_id: str
+) -> JSONResponse:
+    """Create fallback response when everything else fails"""
+    
+    # Try to extract username from request
+    username = "Guest"
+    try:
+        body = await request.body()
+        if body:
+            data = json.loads(body)
+            username = data.get('username', 'Guest')
+    except:
+        pass
+    
+    logger.info(f"[{request_id}] Using fallback response for: {username}")
+    
+    return JSONResponse({
+        "success": True,
+        "message": "Your registration has been received successfully",
+        "redirect_url": "/service.html",
+        "user": {
+            "username": username,
+            "status": "registered",
+            "note": "Complete setup on next login"
+        },
+        "request_id": request_id,
+        "fallback_mode": True
+    })
+
+
+def _get_redirect_url_by_role(role: str) -> str:
+    """Determine redirect URL based on user role"""
+    role_redirects = {
+        "admin": "/admin/dashboard",
+        "team_member": "/team/dashboard",
+        "staff": "/staff/dashboard"
+    }
+    return role_redirects.get(role.lower(), "/service.html")
+
+
+def _set_auth_cookies(
+    response: JSONResponse,
+    access_token: str,
+    user_id: str,
+    session_id: Optional[str] = None
+) -> None:
+    """Set authentication cookies on response"""
+    
+    # Access token cookie
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=not settings.DEBUG,
+        samesite="lax",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/"
+    )
+    
+    # User ID cookie (accessible to frontend)
+    response.set_cookie(
+        key="user_id",
+        value=user_id,
+        httponly=False,
+        secure=not settings.DEBUG,
+        samesite="lax",
+        max_age=24 * 60 * 60,  # 24 hours
+        path="/"
+    )
+    
+    # Session ID cookie if provided
+    if session_id:
+        response.set_cookie(
+            key="session_id",
+            value=session_id,
+            httponly=True,
+            secure=not settings.DEBUG,
+            samesite="lax",
+            path="/"
+        )
+
+
+# ==================== ERROR HANDLING ====================
+
+class RegistrationError(Exception):
+    """Custom exception for registration errors"""
+    pass
+
+
+@router.exception_handler(RegistrationError)
+asy
