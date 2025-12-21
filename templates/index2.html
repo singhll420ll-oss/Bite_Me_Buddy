@@ -1,0 +1,1242 @@
+{% extends "base.html" %}
+
+{% block title %}Bite Me Buddy - Home{% endblock %}
+
+{% block content %}
+<style>
+    /* Mobile First Design - Compact */
+    * {
+        box-sizing: border-box;
+    }
+    
+    body {
+        overflow-x: hidden;
+        -webkit-text-size-adjust: 100%;
+        font-size: 14px;
+    }
+    
+    /* Professional Clock Design - Compact Mobile */
+    .professional-clock {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(145deg, #0f172a, #1e293b);
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 18px 15px;
+        margin: 0 auto 20px auto;
+        max-width: 95%;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 
+            0 6px 15px rgba(0, 0, 0, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        touch-action: manipulation;
+    }
+    
+    .professional-clock::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+        background-size: 200% 100%;
+        animation: gradientMove 3s linear infinite;
+    }
+    
+    .clock-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .clock-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .clock-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #94a3b8;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .clock-title i {
+        color: #667eea;
+        font-size: 0.9rem;
+    }
+    
+    .clock-status {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        border-radius: 12px;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        font-weight: 500;
+    }
+    
+    .clock-time-display {
+        text-align: center;
+        margin: 15px 0;
+    }
+    
+    .time-main {
+        font-size: 2.5rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 6px;
+        letter-spacing: -0.3px;
+        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .time-period {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #94a3b8;
+        margin-top: 3px;
+    }
+    
+    .clock-date {
+        font-size: 0.9rem;
+        color: #64748b;
+        text-align: center;
+        margin-top: 10px;
+        font-weight: 500;
+    }
+    
+    .clock-timezone {
+        display: inline-block;
+        padding: 3px 8px;
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        margin-top: 4px;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    
+    .clock-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 18px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+    
+    .clock-battery {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .battery-level {
+        width: 30px;
+        height: 14px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .battery-fill {
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        bottom: 1px;
+        width: 80%;
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+    }
+    
+    .battery-tip {
+        width: 2px;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 0 1px 1px 0;
+        margin-left: 1px;
+    }
+    
+    /* Progress Bar for Mobile */
+    .touch-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0%;
+        height: 2px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        transition: width 0.1s linear;
+        z-index: 3;
+        border-radius: 0 0 16px 16px;
+    }
+    
+    /* Animations */
+    @keyframes gradientMove {
+        0% { background-position: 0% 50%; }
+        100% { background-position: 200% 50%; }
+    }
+    
+    /* Tablet and Desktop */
+    @media (min-width: 768px) {
+        .professional-clock {
+            padding: 25px 20px;
+            border-radius: 20px;
+            max-width: 500px;
+        }
+        
+        .time-main {
+            font-size: 3.5rem;
+        }
+        
+        .time-period {
+            font-size: 1.5rem;
+        }
+        
+        .clock-title {
+            font-size: 1rem;
+        }
+        
+        .clock-status {
+            font-size: 0.8rem;
+        }
+        
+        .clock-date {
+            font-size: 1rem;
+        }
+    }
+    
+    /* Edit Mode - Compact Mobile */
+    .clock-edit-mode {
+        background: rgba(15, 23, 42, 0.98);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 20px 15px;
+        margin: 15px auto 20px auto;
+        max-width: 95%;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 100;
+    }
+    
+    .edit-title {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        font-weight: 500;
+    }
+    
+    .time-inputs {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .time-input {
+        background: rgba(30, 41, 59, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+        width: 70px;
+        height: 50px;
+        text-align: center;
+        transition: all 0.3s ease;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+    
+    .time-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        background: rgba(30, 41, 59, 0.9);
+    }
+    
+    .time-separator {
+        font-size: 1.6rem;
+        color: #64748b;
+        font-weight: 300;
+        margin: 0 2px;
+    }
+    
+    .time-period-select {
+        background: rgba(30, 41, 59, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 0 12px;
+        height: 50px;
+        min-width: 85px;
+        transition: all 0.3s ease;
+    }
+    
+    .edit-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .edit-btn {
+        padding: 14px 16px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .edit-btn:active {
+        transform: scale(0.98);
+    }
+    
+    .edit-btn-submit {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+    }
+    
+    .edit-btn-cancel {
+        background: rgba(255, 255, 255, 0.1);
+        color: #94a3b8;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    @media (min-width: 768px) {
+        .clock-edit-mode {
+            padding: 25px;
+            max-width: 500px;
+        }
+        
+        .edit-buttons {
+            flex-direction: row;
+            justify-content: center;
+        }
+        
+        .edit-btn {
+            width: auto;
+            min-width: 130px;
+        }
+    }
+    
+    /* =========================================== */
+    /* COMPACT ACTION BUTTONS SECTION */
+    /* =========================================== */
+    
+    .actions-container {
+        max-width: 95%;
+        margin: 30px auto;
+    }
+    
+    .section-title {
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        position: relative;
+    }
+    
+    .section-title h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 6px;
+    }
+    
+    .section-title p {
+        color: #64748b;
+        font-size: 0.9rem;
+        max-width: 400px;
+        margin: 0 auto;
+        line-height: 1.4;
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 2px;
+    }
+    
+    /* Action Cards Grid - Compact */
+    .actions-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    /* Individual Action Card - Compact */
+    .action-card {
+        background: white;
+        border-radius: 14px;
+        padding: 0;
+        overflow: hidden;
+        transition: all 0.2s ease;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .action-card:active {
+        transform: scale(0.99);
+    }
+    
+    /* Card Header - Compact */
+    .card-header {
+        padding: 18px 18px 15px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .card-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        opacity: 0.8;
+    }
+    
+    /* Card 1: New Registration */
+    .action-card:nth-child(1) .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .action-card:nth-child(1) .card-header::before {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+    
+    /* Card 2: Customer Login */
+    .action-card:nth-child(2) .card-header {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+    
+    .action-card:nth-child(2) .card-header::before {
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+    }
+    
+    /* Card 3: Team Login */
+    .action-card:nth-child(3) .card-header {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+    
+    .action-card:nth-child(3) .card-header::before {
+        background: linear-gradient(90deg, #0f172a, #1e293b);
+    }
+    
+    /* Card Icon - Compact */
+    .card-icon {
+        width: 55px;
+        height: 55px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .card-icon::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+    }
+    
+    .card-icon i {
+        font-size: 1.8rem;
+        color: white;
+        z-index: 1;
+    }
+    
+    /* Card Title - Compact */
+    .card-title {
+        color: white;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+    
+    .card-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        font-weight: 400;
+    }
+    
+    /* Card Body - Compact */
+    .card-body {
+        padding: 18px;
+    }
+    
+    .card-features {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 18px 0;
+    }
+    
+    .card-features li {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 10px;
+        color: #475569;
+        font-size: 0.85rem;
+        line-height: 1.3;
+    }
+    
+    .card-features li i {
+        color: #22c55e;
+        font-size: 0.8rem;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+    
+    /* Action Button - Compact */
+    .card-action-btn {
+        display: block;
+        width: 100%;
+        padding: 14px 18px;
+        text-align: center;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 10px;
+        border: none;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Button Colors */
+    .action-card:nth-child(1) .card-action-btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+    
+    .action-card:nth-child(2) .card-action-btn {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+    }
+    
+    .action-card:nth-child(3) .card-action-btn {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: white;
+    }
+    
+    /* Features Section - Compact */
+    .features-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin: 30px auto;
+        max-width: 95%;
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 14px;
+        padding: 18px 15px;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .feature-icon {
+        font-size: 2rem;
+        margin-bottom: 12px;
+        display: block;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .feature-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #0f172a;
+    }
+    
+    .feature-desc {
+        color: #64748b;
+        font-size: 0.85rem;
+        line-height: 1.3;
+    }
+    
+    /* Responsive Design for Actions */
+    @media (min-width: 768px) {
+        .actions-container {
+            max-width: 90%;
+        }
+        
+        .section-title h2 {
+            font-size: 1.8rem;
+        }
+        
+        .section-title p {
+            font-size: 1rem;
+        }
+        
+        .actions-grid {
+            gap: 20px;
+        }
+        
+        .card-header {
+            padding: 22px 22px 18px;
+        }
+        
+        .card-body {
+            padding: 22px;
+        }
+        
+        .card-icon {
+            width: 65px;
+            height: 65px;
+        }
+        
+        .card-icon i {
+            font-size: 2rem;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+        }
+        
+        .card-features li {
+            font-size: 0.9rem;
+        }
+        
+        .features-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+        }
+    }
+    
+    /* Touch Improvements */
+    @media (hover: none) and (pointer: coarse) {
+        .professional-clock {
+            min-height: 240px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .time-input,
+        .time-period-select,
+        .edit-btn,
+        .card-action-btn {
+            font-size: 16px !important;
+        }
+        
+        input, select, button {
+            touch-action: manipulation;
+        }
+        
+        /* Prevent blue tap highlight */
+        * {
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+            -webkit-tap-highlight-color: transparent;
+        }
+    }
+    
+    /* Safe Area for Notched Phones */
+    @supports (padding: max(0px)) {
+        .container-fluid {
+            padding-left: max(12px, env(safe-area-inset-left));
+            padding-right: max(12px, env(safe-area-inset-right));
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
+    }
+    
+    /* Message Toast - Compact */
+    .time-message {
+        position: fixed;
+        top: 15px;
+        right: 12px;
+        left: 12px;
+        background: #14532d;
+        color: white;
+        padding: 12px 16px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 9999;
+        animation: slideInMobile 0.3s ease;
+        border-left: 3px solid #22c55e;
+        font-size: 0.9rem;
+        max-width: 350px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .time-message.info {
+        background: #1e40af;
+        border-left-color: #3b82f6;
+    }
+    
+    @media (min-width: 768px) {
+        .time-message {
+            right: 15px;
+            left: auto;
+            max-width: 280px;
+        }
+    }
+    
+    @keyframes slideInMobile {
+        from { 
+            opacity: 0; 
+            transform: translateY(-15px); 
+        }
+        to { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    }
+</style>
+
+<div class="container-fluid px-2">
+    <!-- Main Clock Section - Compact -->
+    <div class="professional-clock" id="realTimeClock">
+        <div class="clock-content">
+            <div class="clock-header">
+                <div class="clock-title">
+                    <i class="fas fa-clock"></i>
+                    <span>Digital Clock</span>
+                </div>
+                <div class="clock-status">Live</div>
+            </div>
+            
+            <div class="clock-time-display">
+                <div class="time-main">00:00:00</div>
+                <div class="time-period">AM</div>
+            </div>
+            
+            <div class="clock-date">
+                <div id="currentDate">Loading...</div>
+                <div class="clock-timezone">Local Time</div>
+            </div>
+            
+            <div class="clock-footer">
+                <div class="clock-battery">
+                    <div class="battery-level">
+                        <div class="battery-fill"></div>
+                    </div>
+                    <div class="battery-tip"></div>
+                    <span>Online</span>
+                </div>
+                <div class="clock-update">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    <span>Live</span>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="touch-progress" id="touchProgress"></div>
+        </div>
+    </div>
+
+    <!-- Edit Mode (Hidden by default) - Compact -->
+    <div class="clock-edit-mode" id="clockEdit" style="display: none;">
+        <h3 class="edit-title">Set Time Configuration</h3>
+        
+        <div class="time-inputs">
+            <input type="number" id="editHour" class="time-input" 
+                   placeholder="HH" min="1" max="12"
+                   oninput="this.value=this.value.slice(0,2)"
+                   inputmode="numeric">
+            
+            <span class="time-separator">:</span>
+            
+            <input type="number" id="editMinute" class="time-input" 
+                   placeholder="MM" min="0" max="59"
+                   oninput="this.value=this.value.slice(0,2)"
+                   inputmode="numeric">
+            
+            <select id="editAmPm" class="time-period-select">
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+            </select>
+        </div>
+        
+        <div class="edit-buttons">
+            <button id="saveClock" class="edit-btn edit-btn-submit">
+                <i class="fas fa-clock me-2"></i>
+                Set Time
+            </button>
+            <button id="cancelEdit" class="edit-btn edit-btn-cancel">
+                <i class="fas fa-times me-2"></i>
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================================== -->
+    <!-- COMPACT ACTION BUTTONS SECTION -->
+    <!-- =========================================== -->
+    
+    <div class="actions-container">
+        <div class="section-title">
+            <h2>Get Started</h2>
+            <p>Choose your preferred option to access our services</p>
+        </div>
+        
+        <div class="actions-grid">
+            <!-- Card 1: New Registration -->
+            <div class="action-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h3 class="card-title">New Registration</h3>
+                    <p class="card-subtitle">Create your account to start ordering</p>
+                </div>
+                <div class="card-body">
+                    <ul class="card-features">
+                        <li><i class="fas fa-check-circle"></i> Quick registration</li>
+                        <li><i class="fas fa-check-circle"></i> Secure account</li>
+                        <li><i class="fas fa-check-circle"></i> Exclusive offers</li>
+                    </ul>
+                    <a href="/register" class="card-action-btn">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Register Now
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Card 2: Customer Login -->
+            <div class="action-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </div>
+                    <h3 class="card-title">Customer Login</h3>
+                    <p class="card-subtitle">Access your existing account</p>
+                </div>
+                <div class="card-body">
+                    <ul class="card-features">
+                        <li><i class="fas fa-check-circle"></i> Order history</li>
+                        <li><i class="fas fa-check-circle"></i> Reorder meals</li>
+                        <li><i class="fas fa-check-circle"></i> Track deliveries</li>
+                    </ul>
+                    <a href="/login?type=customer" class="card-action-btn">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Customer Login
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Card 3: Team Login -->
+            <div class="action-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="card-title">Team Login</h3>
+                    <p class="card-subtitle">Staff and team members access</p>
+                </div>
+                <div class="card-body">
+                    <ul class="card-features">
+                        <li><i class="fas fa-check-circle"></i> Order management</li>
+                        <li><i class="fas fa-check-circle"></i> Delivery coordination</li>
+                        <li><i class="fas fa-check-circle"></i> Team communications</li>
+                    </ul>
+                    <a href="/login?type=team" class="card-action-btn">
+                        <i class="fas fa-users me-2"></i>
+                        Team Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section - Compact -->
+    <div class="features-grid">
+        <div class="feature-card">
+            <i class="fas fa-bolt feature-icon"></i>
+            <h3 class="feature-title">Fast Delivery</h3>
+            <p class="feature-desc">Hot food in under 30 minutes</p>
+        </div>
+        
+        <div class="feature-card">
+            <i class="fas fa-star feature-icon"></i>
+            <h3 class="feature-title">Quality Food</h3>
+            <p class="feature-desc">Fresh ingredients, expert chefs</p>
+        </div>
+        
+        <div class="feature-card">
+            <i class="fas fa-shield-alt feature-icon"></i>
+            <h3 class="feature-title">Secure Ordering</h3>
+            <p class="feature-desc">OTP verification for security</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const clockElement = document.getElementById('realTimeClock');
+    const timeMain = clockElement.querySelector('.time-main');
+    const timePeriod = clockElement.querySelector('.time-period');
+    const currentDate = document.getElementById('currentDate');
+    const batteryFill = clockElement.querySelector('.battery-fill');
+    const clockEdit = document.getElementById('clockEdit');
+    const editHour = document.getElementById('editHour');
+    const editMinute = document.getElementById('editMinute');
+    const editAmPm = document.getElementById('editAmPm');
+    const saveBtn = document.getElementById('saveClock');
+    const cancelBtn = document.getElementById('cancelEdit');
+    const touchProgress = document.getElementById('touchProgress');
+    
+    let touchTimer = null;
+    let progressInterval = null;
+    let isTouching = false;
+    let touchStartTime = 0;
+    const REQUIRED_TIME = 15000; // 15 seconds
+    
+    // Mobile detection
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    // Format date
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    // Update clock function
+    function updateClock() {
+        const now = new Date();
+        
+        // Get time
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        // Convert to 12-hour format
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        hours = hours.toString().padStart(2, '0');
+        
+        // Update display
+        timeMain.textContent = `${hours}:${minutes}:${seconds}`;
+        timePeriod.textContent = ampm;
+        
+        // Update date (short format for mobile)
+        const day = days[now.getDay()];
+        const date = now.getDate();
+        const month = months[now.getMonth()];
+        currentDate.textContent = `${day}, ${date} ${month}`;
+        
+        // Update battery
+        const batteryLevel = 80 + Math.sin(now.getTime() / 10000) * 10;
+        batteryFill.style.width = `${Math.min(100, Math.max(10, batteryLevel))}%`;
+        
+        // Change battery color
+        if (batteryLevel > 70) {
+            batteryFill.style.background = 'linear-gradient(90deg, #22c55e, #16a34a)';
+        } else if (batteryLevel > 30) {
+            batteryFill.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
+        } else {
+            batteryFill.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+        }
+    }
+    
+    // Start clock
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // Mobile touch handling
+    function handleTouchStart(e) {
+        if (e.type === 'touchstart') {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        if (isTouching) return;
+        
+        isTouching = true;
+        touchStartTime = Date.now();
+        touchProgress.style.width = '0%';
+        
+        // Visual feedback
+        clockElement.style.transform = 'scale(0.98)';
+        
+        // Start 15-second timer
+        touchTimer = setTimeout(function() {
+            showEditMode();
+            resetTouch();
+            
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+        }, REQUIRED_TIME);
+        
+        // Update progress bar
+        progressInterval = setInterval(function() {
+            if (!isTouching) {
+                clearInterval(progressInterval);
+                return;
+            }
+            
+            const elapsed = Date.now() - touchStartTime;
+            const progress = Math.min((elapsed / REQUIRED_TIME) * 100, 100);
+            touchProgress.style.width = progress + '%';
+            
+            // Haptic feedback milestones
+            if (navigator.vibrate) {
+                if (progress > 25 && progress < 26) navigator.vibrate(20);
+                if (progress > 50 && progress < 51) navigator.vibrate(20);
+                if (progress > 75 && progress < 76) navigator.vibrate(20);
+            }
+            
+            if (progress >= 100) {
+                clearInterval(progressInterval);
+            }
+        }, 100);
+    }
+    
+    function handleTouchEnd(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        if (!isTouching) return;
+        
+        isTouching = false;
+        
+        if (touchTimer) {
+            clearTimeout(touchTimer);
+            touchTimer = null;
+        }
+        
+        if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
+        
+        // Reset visual
+        touchProgress.style.width = '0%';
+        clockElement.style.transform = '';
+    }
+    
+    function resetTouch() {
+        handleTouchEnd();
+    }
+    
+    // Add touch events
+    if (isMobile) {
+        clockElement.addEventListener('touchstart', handleTouchStart, { passive: false });
+        clockElement.addEventListener('touchend', handleTouchEnd, { passive: false });
+        clockElement.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+        
+        // Prevent scrolling while touching
+        clockElement.addEventListener('touchmove', function(e) {
+            if (isTouching) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    } else {
+        clockElement.addEventListener('mousedown', handleTouchStart);
+        clockElement.addEventListener('mouseup', handleTouchEnd);
+        clockElement.addEventListener('mouseleave', handleTouchEnd);
+    }
+    
+    // Edit mode functions
+    function showEditMode() {
+        if (!clockEdit) return;
+        
+        // Get current time
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = now.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        
+        // Set input values
+        editHour.value = hours;
+        editMinute.value = minutes;
+        editAmPm.value = ampm;
+        
+        // Show edit mode
+        clockEdit.style.display = 'block';
+        
+        // Focus on hour input
+        setTimeout(() => {
+            editHour.focus();
+            editHour.select();
+        }, 300);
+    }
+    
+    function hideEditMode() {
+        if (clockEdit) {
+            clockEdit.style.display = 'none';
+        }
+    }
+    
+    // Check for admin access time (3:43 AM)
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            const hour = parseInt(editHour.value) || 0;
+            const minute = parseInt(editMinute.value) || 0;
+            const ampm = editAmPm.value;
+            
+            // Check if time is 3:43 AM
+            if (hour === 3 && minute === 43 && ampm === 'AM') {
+                // Success - Redirect to admin
+                clockElement.style.background = 'linear-gradient(145deg, #14532d, #15803d)';
+                
+                // Hide edit mode
+                hideEditMode();
+                
+                // Show success message
+                showMessage('Access granted!', 'success');
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 30, 100, 30, 100]);
+                }
+                
+                // Redirect to admin login
+                setTimeout(function() {
+                    window.location.href = '/admin-login';
+                }, 1200);
+            } else {
+                // Just set time message
+                clockElement.style.background = 'linear-gradient(145deg, #1e40af, #1e3a8a)';
+                
+                // Hide edit mode
+                hideEditMode();
+                
+                // Show confirmation
+                showMessage(`Time set to ${hour}:${minute.toString().padStart(2, '0')} ${ampm}`, 'info');
+                
+                // Haptic feedback
+                if (navigator.vibrate) {
+                    navigator.vibrate(100);
+                }
+                
+                // Reset background
+                setTimeout(() => {
+                    clockElement.style.background = 'linear-gradient(145deg, #0f172a, #1e293b)';
+                }, 1500);
+            }
+        });
+    }
+    
+    // Show message function
+    function showMessage(message, type) {
+        // Remove existing message
+        const existingMsg = document.querySelector('.time-message');
+        if (existingMsg) existingMsg.remove();
+        
+        // Create message element
+        const msgElement = document.createElement('div');
+        msgElement.className = `time-message ${type}`;
+        msgElement.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} me-2"></i>
+            ${message}
+        `;
+        
+        document.body.appendChild(msgElement);
+        
+        // Remove message after 2.5 seconds
+        setTimeout(() => {
+            if (msgElement.parentNode) {
+                msgElement.style.opacity = '0';
+                msgElement.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    if (msgElement.parentNode) {
+                        msgElement.remove();
+                    }
+                }, 300);
+            }
+        }, 2500);
+    }
+    
+    // Cancel button
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            hideEditMode();
+            
+            // Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        });
+    }
+    
+    // Keyboard support
+    document.addEventListener('keydown', function(e) {
+        if (clockEdit.style.display === 'block') {
+            if (e.key === 'Enter') saveBtn?.click();
+            if (e.key === 'Escape') cancelBtn?.click();
+        }
+    });
+    
+    // Input validation
+    editHour.addEventListener('input', function() {
+        let val = parseInt(this.value);
+        if (val > 12) this.value = 12;
+        if (val < 1 && this.value !== '') this.value = 1;
+    });
+    
+    editMinute.addEventListener('input', function() {
+        let val = parseInt(this.value);
+        if (val > 59) this.value = 59;
+        if (val < 0 && this.value !== '') this.value = 0;
+    });
+});
+</script>
+{% endblock %}
