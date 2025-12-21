@@ -23,8 +23,13 @@ class UserBase(BaseModel):
     phone: str = Field(..., min_length=10, max_length=20)
     address: Optional[str] = None
 
-class UserCreate(UserBase):
+# ✅ UPDATED: UserCreate schema with all required fields
+class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
+    full_name: str = Field(..., min_length=2, max_length=100)
+    email: Optional[EmailStr] = None
+    phone: str = Field(..., min_length=10, max_length=20)
+    address: str = Field(..., min_length=5)
     password: str = Field(..., min_length=6)
     role: UserRole = UserRole.CUSTOMER
 
@@ -32,9 +37,14 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
-class UserResponse(UserBase):
+# ✅ UPDATED: UserResponse schema
+class UserResponse(BaseModel):
     id: int
     username: str
+    full_name: str
+    email: Optional[str]
+    phone: str
+    address: str
     role: str
     is_active: bool
     created_at: datetime
