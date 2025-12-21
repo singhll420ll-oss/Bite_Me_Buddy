@@ -12,12 +12,8 @@
                 </h4>
             </div>
             <div class="card-body">
-                <!-- IMPORTANT: HTMX ko JSON bhejne ke liye -->
-                <form id="registerForm" hx-post="/api/register" 
-                      hx-target="#response-message" 
-                      hx-swap="innerHTML"
-                      hx-headers='{"Content-Type": "application/json"}'>
-                      
+                <!-- HTMX removed - Simple form with JavaScript -->
+                <form id="registerForm" method="POST">
                     <div id="response-message"></div>
                     
                     <div class="row">
@@ -112,78 +108,69 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submitBtn');
     const responseDiv = document.getElementById('response-message');
     
-    // Password validation
-    form.addEventListener('submit', function(event) {
+    // ✅ FORM SUBMIT HANDLER - Database save + Redirect
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        // 1. Password validation
         if (password.value !== confirmPassword.value) {
-            event.preventDefault();
-            showMessage('Passwords do not match!', 'danger');
+            showMessage('❌ Passwords do not match!', 'danger');
             confirmPassword.focus();
-            return false;
+            return;
         }
         
-        // Disable button and show loading
+        // 2. Disable button and show loading
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Registering...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving to Database...';
         
-        // Show loading message
-        showMessage('Processing your registration...', 'info');
-    });
-    
-    // Custom HTMX configuration for JSON
-    htmx.on('htmx:configRequest', function(event) {
-        if (event.detail.path === '/api/register') {
-            // Prevent default form submission
-            event.preventDefault();
+        // 3. Collect form data
+        const formData = {
+            username: document.getElementById('username').value.trim(),
+            full_name: document.getElementById('name').value.trim(),
+            email: document.getElementById('email').value.trim() || null,
+            phone: document.getElementById('phone').value.trim(),
+            address: document.getElementById('address').value.trim(),
+            password: document.getElementById('password').value
+        };
+        
+        console.log('Sending to server:', formData);
+        
+        try {
+            // 4. Send to backend API (Flask/Python)
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
             
-            // Collect form data
-            const formData = {
-                username: document.getElementById('username').value.trim(),
-                full_name: document.getElementById('name').value.trim(),
-                email: document.getElementById('email').value.trim() || null,
-                phone: document.getElementById('phone').value.trim(),
-                address: document.getElementById('address').value.trim(),
-                password: document.getElementById('password').value
-            };
+            // 5. Parse response
+            const result = await response.json();
+            console.log('Server response:', result);
             
-            console.log('Sending registration data:', formData);
+            if (result.success) {
+                // ✅ SUCCESS: Show message and REDIRECT
+                showMessage('✅ Registration successful! Data saved to database. Redirecting to service page...', 'success');
+                
+                // ✅✅✅ REDIRECT TO service.html ✅✅✅
+                setTimeout(() => {
+                    window.location.href = result.redirect_url || '/service.html';
+                }, 2000);
+                
+            } else {
+                // ❌ ERROR: Show error message
+                showMessage('❌ ' + (result.error || 'Registration failed. Please try again.'), 'danger');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Register';
+            }
             
-            // Set custom request
-            event.detail.headers['Content-Type'] = 'application/json';
-            event.detail.verb = 'post';
-            event.detail.body = JSON.stringify(formData);
-            event.detail.target = '#response-message';
-            event.detail.swap = 'innerHTML';
-        }
-    });
-    
-    // Handle HTMX response
-    htmx.on('htmx:afterRequest', function(event) {
-        if (event.detail.path === '/api/register') {
-            // Re-enable button
+        } catch (error) {
+            // ❌ NETWORK ERROR
+            console.error('Network error:', error);
+            showMessage('❌ Network error. Please check your connection and try again.', 'danger');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Register';
-            
-            // Check response status
-            if (event.detail.successful) {
-                try {
-                    const response = JSON.parse(event.detail.xhr.responseText);
-                    if (response.success) {
-                        showMessage('✅ Registration successful! Redirecting...', 'success');
-                        setTimeout(() => {
-                            window.location.href = response.redirect_url || '/services';
-                        }, 2000);
-                    } else {
-                        showMessage('❌ ' + (response.detail || response.error || 'Registration failed'), 'danger');
-                    }
-                } catch (e) {
-                    showMessage('✅ Registration successful! Redirecting...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/services';
-                    }, 1000);
-                }
-            } else {
-                showMessage('❌ Network error. Please try again.', 'danger');
-            }
         }
     });
     
@@ -195,13 +182,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
-        
-        // Auto-remove success messages
-        if (type === 'success') {
-            setTimeout(() => {
-                responseDiv.innerHTML = '';
-            }, 3000);
-        }
     }
     
     // Real-time username suggestion from email
