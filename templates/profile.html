@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item active">My Profile</li>
+            </ol>
+        </nav>
+        
+        <h2 class="text-primary"><i class="fas fa-user"></i> My Profile</h2>
+        <p class="lead">Manage your account information</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <!-- Profile Card -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-id-card"></i> Profile</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user-circle fa-5x text-primary"></i>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary mt-2" onclick="changeAvatar()">
+                        <i class="fas fa-camera"></i> Change Photo
+                    </button>
+                </div>
+                
+                <h4 id="profileName">Loading...</h4>
+                <p class="text-muted" id="profileEmail">Loading...</p>
+                
+                <div class="profile-stats mt-4">
+                    <div class="row">
+                        <div class="col-6">
+                            <h5 id="totalOrders">0</h5>
+                            <p class="small text-muted">Orders</p>
+                        </div>
+                        <div class="col-6">
+                            <h5 id="memberSince">0</h5>
+                            <p class="small text-muted">Days</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Account Security -->
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-shield-alt"></i> Account Security</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="changePassword()">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                    <button class="btn btn-outline-info" onclick="viewSessions()">
+                        <i class="fas fa-history"></i> Login History
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="deleteAccount()">
+                        <i class="fas fa-trash"></i> Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <!-- Edit Profile Form -->
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-edit"></i> Edit Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <form id="profileForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="form-text">Your login email</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Username *</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                                <div class="form-text">Your unique username</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Address *</label>
+                        <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                        <div class="form-text">Your delivery address</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" id="city" name="city">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">State</label>
+                                <input type="text" class="form-control" id="state" name="state">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Pincode</label>
+                                <input type="text" class="form-control" id="pincode" name="pincode">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" id="dob" name="dob">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Gender</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="gender" id="male" value="male">
+                                <label class="form-check-label" for="male">Male</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="gender" id="female" value="female">
+                                <label class="form-check-label" for="female">Female</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="gender" id="other" value="other">
+                                <label class="form-check-label" for="other">Other</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="loadProfileData()">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Preferences -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-cog"></i> Preferences</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                        <label class="form-check-label" for="emailNotifications">
+                            Email Notifications
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="smsNotifications">
+                        <label class="form-check-label" for="smsNotifications">
+                            SMS Notifications
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="promotionalEmails">
+                        <label class="form-check-label" for="promotionalEmails">
+                            Promotional Emails
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Preferred Cuisine</label>
+                    <select class="form-select" id="preferredCuisine" multiple>
+                        <option value="indian">Indian</option>
+                        <option value="chinese">Chinese</option>
+                        <option value="italian">Italian</option>
+                        <option value="mexican">Mexican</option>
+                        <option value="fastfood">Fast Food</option>
+                        <option value="desserts">Desserts</option>
+                    </select>
+                    <div class="form-text">Hold Ctrl to select multiple options</div>
+                </div>
+                
+                <button class="btn btn-outline-primary" onclick="savePreferences()">
+                    <i class="fas fa-save"></i> Save Preferences
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+        background: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #17a2b8;
+    }
+</style>
+
+<script>
+    // Mock user data - in real app, this would come from API
+    const mockUser = {
+        id: 1,
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '+91 9876543210',
+        username: 'johndoe',
+        address: '123 Main Street, Mumbai',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        pincode: '400001',
+        dob: '1990-01-01',
+        gender: 'male',
+        joined_date: '2024-01-15',
+        total_orders: 12,
+        preferences: {
+            email_notifications: true,
+            sms_notifications: false,
+            promotional_emails: true,
+            preferred_cuisine: ['indian', 'chinese']
+        }
+    };
+    
+    function loadProfileData() {
+        // In real app: fetch('/api/profile')
+        
+        // Set form values
+        document.getElementById('name').value = mockUser.name;
+        document.getElementById('email').value = mockUser.email;
+        document.getElementById('phone').value = mockUser.phone;
+        document.getElementById('username').value = mockUser.username;
+        document.getElementById('address').value = mockUser.address;
+        document.getElementById('city').value = mockUser.city;
+        document.getElementById('state').value = mockUser.state;
+        document.getElementById('pincode').value = mockUser.pincode;
+        document.getElementById('dob').value = mockUser.dob;
+        
+        // Set gender radio
+        if (mockUser.gender) {
+            document.getElementById(mockUser.gender).checked = true;
+        }
+        
+        // Update profile card
+        document.getElementById('profileName').textContent = mockUser.name;
+        document.getElementById('profileEmail').textContent = mockUser.email;
+        document.getElementById('totalOrders').textContent = mockUser.total_orders;
+        
+        // Calculate days since joining
+        const joinedDate = new Date(mockUser.joined_date);
+        const today = new Date();
+        const daysSince = Math.floor((today - joinedDate) / (1000 * 60 * 60 * 24));
+        document.getElementById('memberSince').textContent = daysSince;
+        
+        // Set preferences
+        if (mockUser.preferences) {
+            document.getElementById('emailNotifications').checked = mockUser.preferences.email_notifications;
+            document.getElementById('smsNotifications').checked = mockUser.preferences.sms_notifications;
+            document.getElementById('promotionalEmails').checked = mockUser.preferences.promotional_emails;
+            
+            // Set preferred cuisine
+            if (mockUser.preferences.preferred_cuisine) {
+                let select = document.getElementById('preferredCuisine');
+                for (let option of select.options) {
+                    option.selected = mockUser.preferences.preferred_cuisine.includes(option.value);
+                }
+            }
+        }
+    }
+    
+    function changeAvatar() {
+        alert('Avatar change feature would open here.');
+        // In real app: show file upload dialog
+    }
+    
+    function changePassword() {
+        let newPassword = prompt('Enter new password:');
+        if (newPassword && newPassword.length >= 6) {
+            alert('Password change request sent.');
+            // In real app: make API call to change password
+        } else if (newPassword) {
+            alert('Password must be at least 6 characters long.');
+        }
+    }
+    
+    function viewSessions() {
+        alert('Login history would be shown here.');
+        // window.location.href = '/profile/sessions';
+    }
+    
+    function deleteAccount() {
+        if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+            let reason = prompt('Please tell us why you are leaving:');
+            if (reason !== null) {
+                alert('Account deletion request sent.');
+                // In real app: make API call to delete account
+            }
+        }
+    }
+    
+    function savePreferences() {
+        let preferences = {
+            email_notifications: document.getElementById('emailNotifications').checked,
+            sms_notifications: document.getElementById('smsNotifications').checked,
+            promotional_emails: document.getElementById('promotionalEmails').checked,
+            preferred_cuisine: Array.from(document.getElementById('preferredCuisine').selectedOptions)
+                .map(option => option.value)
+        };
+        
+        alert('Preferences saved successfully!');
+        console.log('Preferences:', preferences);
+        
+        // In real app: fetch('/api/profile/preferences', {
+        //     method: 'PUT',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify(preferences)
+        // });
+    }
+    
+    // Handle profile form submission
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let formData = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            username: document.getElementById('username').value,
+            address: document.getElementById('address').value,
+            city: document.getElementById('city').value,
+            state: document.getElementById('state').value,
+            pincode: document.getElementById('pincode').value,
+            dob: document.getElementById('dob').value,
+            gender: document.querySelector('input[name="gender"]:checked')?.value
+        };
+        
+        // Validate
+        if (!formData.name || !formData.email || !formData.phone || !formData.username || !formData.address) {
+            alert('Please fill all required fields');
+            return;
+        }
+        
+        // Show loading
+        let btn = this.querySelector('button[type="submit"]');
+        let originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        btn.disabled = true;
+        
+        // Simulate API call
+        setTimeout(() => {
+            alert('Profile updated successfully!');
+            
+            // Update profile card
+            document.getElementById('profileName').textContent = formData.name;
+            document.getElementById('profileEmail').textContent = formData.email;
+            
+            // Reset button
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 1500);
+    });
+    
+    // Load profile data on page load
+    document.addEventListener('DOMContentLoaded', loadProfileData);
+</script>
+{% endblock %}
