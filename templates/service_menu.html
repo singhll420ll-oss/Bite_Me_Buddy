@@ -1,235 +1,195 @@
 {% extends "base.html" %}
 
-{% block title %}{{ service.name }} - Bite Me Buddy{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h2 class="mb-2">
-                <i class="fas fa-utensils me-2"></i>{{ service.name }}
-            </h2>
-            <p class="lead mb-0">{{ service.description or "Browse our delicious menu" }}</p>
-        </div>
-        <a href="/services" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Services
-        </a>
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="/services">Services</a></li>
+                <li class="breadcrumb-item active">{{ service.name }} Menu</li>
+            </ol>
+        </nav>
+        
+        <h2 class="text-primary">
+            <i class="fas fa-utensils"></i> {{ service.name }}
+        </h2>
+        {% if service.description %}
+        <p class="lead">{{ service.description }}</p>
+        {% endif %}
     </div>
 </div>
 
 <div class="row">
-    <div class="col-lg-8">
-        <div class="card mb-4">
+    <div class="col-md-3">
+        <!-- Menu Categories -->
+        <div class="card shadow mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-list-alt me-2"></i>Menu Items
-                </h5>
+                <h5 class="mb-0">Categories</h5>
             </div>
             <div class="card-body">
-                <div id="menuItems">
-                    {% for item in menu_items %}
-                    <div class="card menu-item-card shadow-sm" id="item-{{ item.id }}">
+                <div class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action active">
+                        All Items
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        Veg
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        Non-Veg
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        Beverages
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        Desserts
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cart Summary -->
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart"></i> Your Cart</h5>
+            </div>
+            <div class="card-body">
+                <div id="cart-summary">
+                    <p class="text-center text-muted">Your cart is empty</p>
+                </div>
+                <a href="/cart" class="btn btn-success w-100 mt-3">
+                    <i class="fas fa-shopping-cart"></i> View Cart
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <!-- Menu Items -->
+        <div class="row">
+            {% if menu_items %}
+                {% for item in menu_items %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow">
+                        {% if item.image_url %}
+                        <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.name }}" style="height: 150px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                            <i class="fas fa-hamburger fa-2x text-muted"></i>
+                        </div>
+                        {% endif %}
                         <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-md-3">
-                                    {% if item.image_url %}
-                                    <img src="{{ item.image_url }}" class="menu-item-img w-100" alt="{{ item.name }}">
-                                    {% else %}
-                                    <div class="menu-item-img bg-secondary d-flex align-items-center justify-content-center">
-                                        <i class="fas fa-hamburger fa-2x text-white"></i>
-                                    </div>
-                                    {% endif %}
+                            <h5 class="card-title">{{ item.name }}</h5>
+                            <p class="card-text small text-muted">
+                                {{ item.description|default('No description available', true) }}
+                            </p>
+                            <h5 class="text-success">₹{{ item.price }}</h5>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="decreaseQuantity({{ item.id }})">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <span class="px-3" id="quantity-{{ item.id }}">0</span>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="increaseQuantity({{ item.id }})">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
                                 </div>
-                                <div class="col-md-6">
-                                    <h5 class="card-title">{{ item.name }}</h5>
-                                    <p class="card-text text-muted">{{ item.description or "Delicious item from our menu" }}</p>
-                                    <h5 class="text-primary">₹{{ "%.2f"|format(item.price) }}</h5>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="input-group">
-                                        <button class="btn btn-outline-secondary" onclick="updateQuantity({{ item.id }}, -1)">
-                                            <i class="fas fa-minus"></i>
-                                        </button>
-                                        <input type="number" id="quantity-{{ item.id }}" 
-                                               class="form-control text-center" 
-                                               value="0" min="0" max="99"
-                                               onchange="updateTotal({{ item.id }})">
-                                        <button class="btn btn-outline-secondary" onclick="updateQuantity({{ item.id }}, 1)">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-                                    </div>
-                                </div>
+                                <button class="btn btn-primary btn-sm" onclick="addToCart({{ item.id }}, '{{ item.name }}', {{ item.price }})">
+                                    <i class="fas fa-cart-plus"></i> Add
+                                </button>
                             </div>
                         </div>
                     </div>
-                    {% else %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
+                        <i class="fas fa-info-circle"></i> 
                         No menu items available for this service.
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-lg-4">
-        <div class="card sticky-top" style="top: 20px;">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-shopping-cart me-2"></i>Your Order
-                </h5>
-            </div>
-            <div class="card-body">
-                <div id="orderSummary">
-                    <div class="text-center text-muted mb-3">
-                        <i class="fas fa-shopping-cart fa-3x"></i>
-                        <p class="mt-2">Your cart is empty</p>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <h5>Total: ₹<span id="totalAmount">0.00</span></h5>
-                </div>
-                <div class="d-grid gap-2 mt-4">
-                    <button class="btn btn-primary" onclick="proceedToCheckout()" disabled id="checkoutBtn">
-                        <i class="fas fa-arrow-right me-2"></i>Proceed to Checkout
-                    </button>
-                    <button class="btn btn-outline-secondary" onclick="clearCart()">
-                        <i class="fas fa-trash me-2"></i>Clear Cart
-                    </button>
-                </div>
-            </div>
+            {% endif %}
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
 <script>
-let cart = {};
-
-function updateQuantity(itemId, change) {
-    const input = document.getElementById(`quantity-${itemId}`);
-    let quantity = parseInt(input.value) + change;
-    if (quantity < 0) quantity = 0;
-    if (quantity > 99) quantity = 99;
-    input.value = quantity;
-    updateTotal(itemId);
-}
-
-function updateTotal(itemId) {
-    const input = document.getElementById(`quantity-${itemId}`);
-    const quantity = parseInt(input.value) || 0;
+    let cart = {};
     
-    if (quantity > 0) {
-        cart[itemId] = quantity;
-    } else {
-        delete cart[itemId];
+    function increaseQuantity(itemId) {
+        let quantitySpan = document.getElementById('quantity-' + itemId);
+        let current = parseInt(quantitySpan.textContent) || 0;
+        quantitySpan.textContent = current + 1;
     }
     
-    updateOrderSummary();
-}
-
-function updateOrderSummary() {
-    const orderSummary = document.getElementById('orderSummary');
-    const totalAmount = document.getElementById('totalAmount');
-    const checkoutBtn = document.getElementById('checkoutBtn');
+    function decreaseQuantity(itemId) {
+        let quantitySpan = document.getElementById('quantity-' + itemId);
+        let current = parseInt(quantitySpan.textContent) || 0;
+        if (current > 0) {
+            quantitySpan.textContent = current - 1;
+        }
+    }
     
-    let total = 0;
-    let itemsHtml = '';
-    
-    for (const [itemId, quantity] of Object.entries(cart)) {
-        // In a real app, you would fetch item details from server
-        // For now, we'll use placeholders
-        const itemElement = document.querySelector(`#item-${itemId}`);
-        if (itemElement) {
-            const itemName = itemElement.querySelector('.card-title').textContent;
-            const itemPrice = parseFloat(itemElement.querySelector('.text-primary').textContent.replace('₹', ''));
-            const itemTotal = itemPrice * quantity;
-            total += itemTotal;
+    function addToCart(itemId, itemName, itemPrice) {
+        let quantity = parseInt(document.getElementById('quantity-' + itemId).textContent) || 0;
+        
+        if (quantity > 0) {
+            if (!cart[itemId]) {
+                cart[itemId] = {
+                    name: itemName,
+                    price: itemPrice,
+                    quantity: 0
+                };
+            }
+            cart[itemId].quantity += quantity;
             
-            itemsHtml += `
-                <div class="cart-item">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <strong>${itemName}</strong>
-                            <br>
-                            <small>₹${itemPrice.toFixed(2)} × ${quantity}</small>
-                        </div>
-                        <div>
-                            <strong>₹${itemTotal.toFixed(2)}</strong>
-                        </div>
-                    </div>
-                </div>
+            updateCartSummary();
+            document.getElementById('quantity-' + itemId).textContent = '0';
+            
+            // Show success message
+            alert(quantity + ' ' + itemName + ' added to cart!');
+        } else {
+            alert('Please select quantity first');
+        }
+    }
+    
+    function updateCartSummary() {
+        let cartDiv = document.getElementById('cart-summary');
+        let totalItems = 0;
+        let totalAmount = 0;
+        
+        for (let itemId in cart) {
+            totalItems += cart[itemId].quantity;
+            totalAmount += cart[itemId].quantity * cart[itemId].price;
+        }
+        
+        if (totalItems === 0) {
+            cartDiv.innerHTML = '<p class="text-center text-muted">Your cart is empty</p>';
+        } else {
+            cartDiv.innerHTML = `
+                <p><strong>Items:</strong> ${totalItems}</p>
+                <p><strong>Total:</strong> ₹${totalAmount.toFixed(2)}</p>
+                <hr>
+                <p class="small text-muted">Items will be saved in your cart</p>
             `;
         }
+        
+        // Save cart to localStorage
+        localStorage.setItem('bite_me_buddy_cart', JSON.stringify(cart));
     }
     
-    if (itemsHtml) {
-        orderSummary.innerHTML = itemsHtml;
-        checkoutBtn.disabled = false;
-    } else {
-        orderSummary.innerHTML = `
-            <div class="text-center text-muted mb-3">
-                <i class="fas fa-shopping-cart fa-3x"></i>
-                <p class="mt-2">Your cart is empty</p>
-            </div>
-        `;
-        checkoutBtn.disabled = true;
-    }
-    
-    totalAmount.textContent = total.toFixed(2);
-}
-
-function clearCart() {
-    cart = {};
-    document.querySelectorAll('input[type="number"]').forEach(input => {
-        input.value = 0;
-    });
-    updateOrderSummary();
-}
-
-function proceedToCheckout() {
-    if (Object.keys(cart).length === 0) {
-        alert('Your cart is empty!');
-        return;
-    }
-    
-    // Prepare cart data
-    const cartData = [];
-    for (const [itemId, quantity] of Object.entries(cart)) {
-        cartData.push({
-            id: parseInt(itemId),
-            quantity: quantity
-        });
-    }
-    
-    // Store in sessionStorage and redirect
-    sessionStorage.setItem('cart', JSON.stringify(cartData));
-    sessionStorage.setItem('serviceId', '{{ service.id }}');
-    window.location.href = '/cart?service_id={{ service.id }}';
-}
-
-// Initialize cart from sessionStorage if exists
-document.addEventListener('DOMContentLoaded', function() {
-    const savedCart = sessionStorage.getItem('cart');
-    const serviceId = sessionStorage.getItem('serviceId');
-    
-    if (savedCart && serviceId == '{{ service.id }}') {
-        try {
-            const cartData = JSON.parse(savedCart);
-            cartData.forEach(item => {
-                cart[item.id] = item.quantity;
-                const input = document.getElementById(`quantity-${item.id}`);
-                if (input) {
-                    input.value = item.quantity;
-                }
-            });
-            updateOrderSummary();
-        } catch (e) {
-            console.error('Error loading cart:', e);
+    // Load cart from localStorage on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        let savedCart = localStorage.getItem('bite_me_buddy_cart');
+        if (savedCart) {
+            cart = JSON.parse(savedCart);
+            updateCartSummary();
         }
-    }
-});
+    });
 </script>
 {% endblock %}
