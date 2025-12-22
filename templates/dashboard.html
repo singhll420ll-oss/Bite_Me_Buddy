@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <!-- Sidebar -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user"></i> Profile</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ user.name }}</h6>
+                <p class="text-muted mb-1">{{ user.email }}</p>
+                <p class="text-muted">{{ user.phone }}</p>
+                <hr>
+                <a href="/profile" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </a>
+            </div>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/services" class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> Browse Services
+                    </a>
+                    <a href="/cart" class="btn btn-outline-success">
+                        <i class="fas fa-shopping-cart"></i> My Cart
+                    </a>
+                    <a href="/myorders" class="btn btn-outline-warning">
+                        <i class="fas fa-history"></i> Order History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <!-- Main Content -->
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-tachometer-alt"></i> Customer Dashboard</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    Welcome back, {{ user.name }}! You have {{ orders|length }} recent orders.
+                </div>
+                
+                <!-- Recent Orders -->
+                <h5 class="mt-4"><i class="fas fa-history"></i> Recent Orders</h5>
+                {% if orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>{{ order.created_at.strftime('%d %b %Y') }}</td>
+                                    <td>₹{{ order.total_amount }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 
+                                            'warning' if order.status == 'pending' 
+                                            else 'info' if order.status == 'confirmed' 
+                                            else 'primary' if order.status == 'preparing' 
+                                            else 'success' if order.status == 'delivered' 
+                                            else 'danger' 
+                                        }}">
+                                            {{ order.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-shopping-basket"></i> 
+                        No orders yet. <a href="/services">Browse our services</a> to place your first order!
+                    </div>
+                {% endif %}
+                
+                <!-- Quick Order Section -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-bolt fa-3x text-primary mb-3"></i>
+                                <h5>Quick Order</h5>
+                                <p>Order your favorite food in seconds</p>
+                                <a href="/services" class="btn btn-primary">Order Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-headset fa-3x text-success mb-3"></i>
+                                <h5>Need Help?</h5>
+                                <p>24/7 customer support</p>
+                                <a href="/contact" class="btn btn-success">Contact Us</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
