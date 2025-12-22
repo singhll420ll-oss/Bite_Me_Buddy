@@ -3,272 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Bite Me Buddy - Food Delivery{% endblock %}</title>
+    <title>{% block title %}{{ title }}{% endblock %}</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --primary-color: #ff6b6b;
-            --secondary-color: #4ecdc4;
-            --dark-color: #2d3436;
-            --light-color: #f8f9fa;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            color: var(--dark-color);
-        }
-        
-        .navbar {
-            background: linear-gradient(135deg, var(--primary-color), #ff8e8e);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-        }
-        
-        .nav-link {
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-        
-        .nav-link:hover {
-            transform: translateY(-2px);
-        }
-        
-        .footer {
-            background: var(--dark-color);
-            color: white;
-            margin-top: auto;
-        }
-        
-        /* Mobile auth specific */
-        .auth-container {
-            min-height: calc(100vh - 200px);
-        }
-        
-        /* User profile dropdown */
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: var(--secondary-color);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
     
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <i class="fas fa-utensils me-2"></i>Bite Me Buddy
+                <i class="fas fa-utensils"></i> Bite Me Buddy
             </a>
-            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">
-                            <i class="fas fa-home me-1"></i>Home
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/services">
-                            <i class="fas fa-concierge-bell me-1"></i>Services
-                        </a>
-                    </li>
-                    
-                    <!-- Authentication Links (Dynamic) -->
-                    <div id="auth-links">
-                        <!-- Will be populated by JavaScript -->
-                        {% if request and request.user %}
-                        <!-- User is logged in -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <span class="user-avatar me-1">
-                                    {{ request.user.mobile|slice:"-2:" }}
-                                </span>
-                                {{ request.user.mobile }}
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="/dashboard">
-                                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                                </a></li>
-                                <li><a class="dropdown-item" href="/profile">
-                                    <i class="fas fa-user-circle me-2"></i>Profile
-                                </a></li>
-                                <li><a class="dropdown-item" href="/myorders">
-                                    <i class="fas fa-clipboard-list me-2"></i>My Orders
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="/auth/logout">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
-                                </a></li>
-                            </ul>
-                        </li>
-                        {% else %}
-                        <!-- User is not logged in -->
+                    {% if request.cookies.get('access_token') %}
                         <li class="nav-item">
-                            <a class="nav-link btn btn-outline-light btn-sm mx-1" href="/auth/register">
-                                <i class="fas fa-user-plus me-1"></i>Register
-                            </a>
+                            <span class="nav-link">Welcome!</span>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link btn btn-light btn-sm mx-1" href="/auth/login">
-                                <i class="fas fa-sign-in-alt me-1"></i>Login
-                            </a>
+                            <a class="nav-link" href="/logout">Logout</a>
                         </li>
-                        {% endif %}
-                    </div>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/index2.html">Order Now</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/register">Register</a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="auth-container">
-        <div class="container py-4">
-            {% block content %}{% endblock %}
-        </div>
+    <main class="container py-4">
+        {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="footer py-4 mt-5">
+    <footer class="bg-dark text-white py-4 mt-auto">
         <div class="container">
             <div class="row">
-                <div class="col-md-4 mb-3">
-                    <h5><i class="fas fa-utensils me-2"></i>Bite Me Buddy</h5>
-                    <p class="small">Delicious food delivered to your doorstep</p>
+                <div class="col-md-4">
+                    <h5><i class="fas fa-utensils"></i> Bite Me Buddy</h5>
+                    <p>Delicious food delivered to your doorstep</p>
                 </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4">
                     <h5>Quick Links</h5>
                     <ul class="list-unstyled">
-                        <li><a href="/" class="text-light text-decoration-none">Home</a></li>
-                        <li><a href="/services" class="text-light text-decoration-none">Services</a></li>
-                        <li><a href="/auth/login" class="text-light text-decoration-none">Login</a></li>
-                        <li><a href="/auth/register" class="text-light text-decoration-none">Register</a></li>
+                        <li><a href="/about" class="text-white-50">About Us</a></li>
+                        <li><a href="/contact" class="text-white-50">Contact</a></li>
+                        <li><a href="/privacy" class="text-white-50">Privacy Policy</a></li>
+                        <li><a href="/terms" class="text-white-50">Terms & Conditions</a></li>
                     </ul>
                 </div>
-                <div class="col-md-4 mb-3">
-                    <h5>Contact Us</h5>
-                    <p class="small mb-1">
-                        <i class="fas fa-phone me-2"></i>+91 9876543210
-                    </p>
-                    <p class="small mb-0">
-                        <i class="fas fa-envelope me-2"></i>support@bitemebuddy.com
-                    </p>
+                <div class="col-md-4">
+                    <h5>Contact Info</h5>
+                    <p><i class="fas fa-phone"></i> +91 1234567890</p>
+                    <p><i class="fas fa-envelope"></i> info@bitemebuddy.com</p>
                 </div>
             </div>
             <hr class="bg-light">
-            <div class="text-center small">
-                <p class="mb-0">&copy; 2024 Bite Me Buddy. All rights reserved.</p>
-                <p class="mb-0">Mobile Authentication System v1.0</p>
+            <div class="text-center">
+                <p>&copy; {{ current_year }} Bite Me Buddy. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Auth Script -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Check if user is logged in
-        const userToken = localStorage.getItem('user_token');
-        const userData = localStorage.getItem('user_data');
-        const authLinks = document.getElementById('auth-links');
-        
-        if (userToken && userData) {
-            try {
-                const user = JSON.parse(userData);
-                
-                // Update navbar for logged in user
-                authLinks.innerHTML = `
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <span class="user-avatar me-1">
-                                ${user.mobile ? user.mobile.slice(-2) : 'U'}
-                            </span>
-                            ${user.mobile || 'User'}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/dashboard">
-                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                            </a></li>
-                            <li><a class="dropdown-item" href="/profile">
-                                <i class="fas fa-user-circle me-2"></i>Profile
-                            </a></li>
-                            <li><a class="dropdown-item" href="/myorders">
-                                <i class="fas fa-clipboard-list me-2"></i>My Orders
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" onclick="logout()">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a></li>
-                        </ul>
-                    </li>
-                `;
-            } catch (e) {
-                console.error('Error parsing user data:', e);
-            }
-        }
-    });
-    
-    // Logout function
-    async function logout() {
-        try {
-            const token = localStorage.getItem('user_token');
-            
-            if (token) {
-                await fetch('/auth/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-            }
-        } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
-            // Clear localStorage and redirect
-            localStorage.removeItem('user_token');
-            localStorage.removeItem('user_data');
-            window.location.href = '/';
-        }
-    }
-    
-    // Check authentication on page load
-    function checkAuth() {
-        const token = localStorage.getItem('user_token');
-        const protectedRoutes = ['/dashboard', '/profile', '/myorders', '/cart'];
-        const currentPath = window.location.pathname;
-        
-        if (protectedRoutes.includes(currentPath) && !token) {
-            window.location.href = '/auth/login';
-        }
-    }
-    
-    // Run check on page load
-    window.addEventListener('load', checkAuth);
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/static/js/main.js"></script>
     
     {% block extra_js %}{% endblock %}
 </body>
