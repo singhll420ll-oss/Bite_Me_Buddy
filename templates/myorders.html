@@ -1,51 +1,300 @@
+
 {% extends "base.html" %}
 
-{% block title %}My Orders - Bite Me Buddy{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <h2 class="mb-3">
-        <i class="fas fa-history me-2"></i>My Orders
-    </h2>
-    <p class="lead">Track your order history</p>
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item active">My Orders</li>
+            </ol>
+        </nav>
+        
+        <h2 class="text-primary"><i class="fas fa-history"></i> My Orders</h2>
+        <p class="lead">Your order history and status</p>
+    </div>
 </div>
 
-<div class="card">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">
-            <i class="fas fa-list-alt me-2"></i>Order History
-        </h5>
-        <button class="btn btn-light btn-sm" onclick="loadOrders()">
-            <i class="fas fa-sync-alt me-1"></i>Refresh
-        </button>
-    </div>
-    <div class="card-body">
-        <div id="ordersList" hx-get="/api/myorders" hx-trigger="load">
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+<div class="row">
+    <div class="col-md-3">
+        <!-- Filter Options -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-filter"></i> Filter Orders</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="status-filter" onchange="filterOrders()">
+                        <option value="all">All Orders</option>
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="preparing">Preparing</option>
+                        <option value="out_for_delivery">Out for Delivery</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
                 </div>
-                <p class="mt-2">Loading orders...</p>
+                <div class="mb-3">
+                    <label class="form-label">Time Period</label>
+                    <select class="form-select" id="time-filter" onchange="filterOrders()">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="3months">Last 3 Months</option>
+                    </select>
+                </div>
+                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                    <i class="fas fa-redo"></i> Reset Filters
+                </button>
+            </div>
+        </div>
+        
+        <!-- Order Stats -->
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Order Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <h3 id="total-orders-count">0</h3>
+                    <p class="text-muted">Total Orders</p>
+                    <hr>
+                    <h3 id="total-spent">₹0</h3>
+                    <p class="text-muted">Total Spent</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <!-- Orders List -->
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Order History</h5>
+            </div>
+            <div class="card-body">
+                {% if orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Date & Time</th>
+                                    <th>Items</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>
+                                        <strong>#{{ order.id }}</strong>
+                                    </td>
+                                    <td>
+                                        {{ order.created_at.strftime('%d %b %Y') }}<br>
+                                        <small class="text-muted">{{ order.created_at.strftime('%I:%M %p') }}</small>
+                                    </td>
+                                    <td>
+                                        {% if order.order_items %}
+                                            {{ order.order_items|length }} items
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>₹{{ order.total_amount }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 
+                                            'warning' if order.status == 'pending' 
+                                            else 'info' if order.status == 'confirmed' 
+                                            else 'primary' if order.status == 'preparing' 
+                                            else 'success' if order.status == 'delivered' 
+                                            else 'danger' if order.status == 'cancelled'
+                                            else 'secondary'
+                                        }}">
+                                            {{ order.status|title }}
+                                        </span>
+                                        {% if order.status == 'out_for_delivery' %}
+                                            <br><small class="text-muted">On the way!</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewOrderDetails({{ order.id }})">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        {% if order.status == 'pending' %}
+                                            <button class="btn btn-sm btn-outline-danger" onclick="cancelOrder({{ order.id }})">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-shopping-bag fa-4x text-muted mb-3"></i>
+                        <h4>No Orders Yet</h4>
+                        <p class="text-muted">You haven't placed any orders yet.</p>
+                        <a href="/services" class="btn btn-primary">
+                            <i class="fas fa-utensils"></i> Order Now
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Order Tracking Example -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-map-marker-alt"></i> Track Recent Order</h5>
+            </div>
+            <div class="card-body">
+                <div class="tracking">
+                    <div class="step active">
+                        <span class="icon"><i class="fas fa-check"></i></span>
+                        <span class="text">Order Placed</span>
+                    </div>
+                    <div class="step {% if orders and orders[0].status != 'pending' %}active{% endif %}">
+                        <span class="icon"><i class="fas fa-check"></i></span>
+                        <span class="text">Confirmed</span>
+                    </div>
+                    <div class="step {% if orders and orders[0].status in ['preparing', 'out_for_delivery', 'delivered'] %}active{% endif %}">
+                        <span class="icon"><i class="fas fa-check"></i></span>
+                        <span class="text">Preparing</span>
+                    </div>
+                    <div class="step {% if orders and orders[0].status in ['out_for_delivery', 'delivered'] %}active{% endif %}">
+                        <span class="icon"><i class="fas fa-check"></i></span>
+                        <span class="text">Out for Delivery</span>
+                    </div>
+                    <div class="step {% if orders and orders[0].status == 'delivered' %}active{% endif %}">
+                        <span class="icon"><i class="fas fa-check"></i></span>
+                        <span class="text">Delivered</span>
+                    </div>
+                </div>
+                
+                {% if orders and orders[0].status != 'delivered' %}
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    Your order #{{ orders[0].id }} is {{ orders[0].status }}.
+                    {% if orders[0].assigned_to %}
+                        Assigned to delivery partner.
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-function loadOrders() {
-    const ordersList = document.getElementById('ordersList');
-    ordersList.innerHTML = `
-        <div class="text-center py-3">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2">Refreshing orders...</p>
-        </div>
-    `;
+<style>
+    .tracking {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+    }
     
-    htmx.trigger('#ordersList', 'load');
-}
+    .tracking:before {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: #ddd;
+        z-index: 1;
+    }
+    
+    .step {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        flex: 1;
+    }
+    
+    .step .icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #ddd;
+        color: white;
+        margin-bottom: 5px;
+    }
+    
+    .step.active .icon {
+        background: #28a745;
+    }
+    
+    .step .text {
+        display: block;
+        font-size: 0.8rem;
+        color: #666;
+    }
+    
+    .step.active .text {
+        color: #28a745;
+        font-weight: bold;
+    }
+</style>
+
+<script>
+    function filterOrders() {
+        let statusFilter = document.getElementById('status-filter').value;
+        let timeFilter = document.getElementById('time-filter').value;
+        
+        // Implement filtering logic here
+        console.log('Filtering by:', statusFilter, timeFilter);
+        // You would typically make an API call here
+        
+        updateStats();
+    }
+    
+    function resetFilters() {
+        document.getElementById('status-filter').value = 'all';
+        document.getElementById('time-filter').value = 'all';
+        filterOrders();
+    }
+    
+    function updateStats() {
+        let totalOrders = {{ orders|length }};
+        let totalSpent = 0;
+        
+        {% for order in orders %}
+            totalSpent += {{ order.total_amount }};
+        {% endfor %}
+        
+        document.getElementById('total-orders-count').textContent = totalOrders;
+        document.getElementById('total-spent').textContent = '₹' + totalSpent.toFixed(2);
+    }
+    
+    function viewOrderDetails(orderId) {
+        // Show order details modal or redirect to order details page
+        alert('Order details for #' + orderId + ' would be shown here.');
+        // window.location.href = '/order/' + orderId;
+    }
+    
+    function cancelOrder(orderId) {
+        if (confirm('Are you sure you want to cancel order #' + orderId + '?')) {
+            // Make API call to cancel order
+            alert('Order #' + orderId + ' cancellation request sent.');
+        }
+    }
+    
+    // Initialize stats on page load
+    document.addEventListener('DOMContentLoaded', updateStats);
 </script>
 {% endblock %}
