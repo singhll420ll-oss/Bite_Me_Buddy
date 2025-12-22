@@ -1,137 +1,100 @@
-# core/config.py
-from pydantic_settings import BaseSettings
-from typing import Optional, List
+# File: config.py
 import os
-from pathlib import Path
+from typing import List
+from pydantic import BaseSettings
+from dotenv import load_dotenv
 
-# Build paths inside the project
-BASE_DIR = Path(__file__).resolve().parent.parent
-
+load_dotenv()
 
 class Settings(BaseSettings):
-    # ===== DATABASE CONFIGURATION =====
+    # Application
+    APP_NAME: str = "Bite Me Buddy"
+    APP_VERSION: str = "1.0.0"
+    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
+    
+    # Server
+    HOST: str = os.getenv("HOST", "0.0.0.0")
+    PORT: int = int(os.getenv("PORT", 8000))
+    
+    # Database
     DATABASE_URL: str = os.getenv(
-        "DATABASE_URL", 
-        "postgresql://bite_me_buddy_user:6Mb7axQ89EkOQTQnqw6shT5CaO2lFY1Z@dpg-d536f8khg0os738kuhm0-a.oregon-postgres.render.com/bite_me_buddy"
+        "DATABASE_URL",
+        "postgresql://bite_me_buddy_user:6Mb7axQ89EkOQTQnqw6shT5CaO2lFY1Z@dpg-d536f8khg0os738kuhm0-a/bite_me_buddy"
     )
     
-    # ===== SECURITY CONFIGURATION =====
-    SECRET_KEY: str = os.getenv(
-        "SECRET_KEY", 
-        "your-super-secret-key-minimum-32-characters-change-this-in-production-123"
-    )
-    ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+    # JWT
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     
-    # ===== TWILIO (SMS) CONFIGURATION =====
-    TWILIO_ACCOUNT_SID: Optional[str] = os.getenv("TWILIO_ACCOUNT_SID")
-    TWILIO_AUTH_TOKEN: Optional[str] = os.getenv("TWILIO_AUTH_TOKEN")
-    TWILIO_PHONE_NUMBER: Optional[str] = os.getenv("TWILIO_PHONE_NUMBER")
-    
-    # ===== APPLICATION SETTINGS =====
-    APP_NAME: str = os.getenv("APP_NAME", "Bite Me Buddy")
-    DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")  # development, staging, production
-    
-    # ===== CORS SETTINGS =====
+    # CORS
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
-        "http://127.0.0.1:3000",
         "http://localhost:8000",
-        "https://bite-me-buddy.onrender.com",
-        "https://*.onrender.com",
-        "*"  # For development only
+        "http://127.0.0.1:8000",
     ]
     
-    # ===== FILE UPLOAD CONFIGURATION =====
-    UPLOAD_DIR: str = os.path.join(BASE_DIR, "static", "uploads")
-    MAX_FILE_SIZE: int = 5 * 1024 * 1024  # 5MB
-    ALLOWED_IMAGE_TYPES: List[str] = [
-        "image/jpeg",
-        "image/png", 
-        "image/gif",
-        "image/webp",
-        "image/svg+xml"
-    ]
+    # File Upload
+    MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
+    ALLOWED_IMAGE_TYPES: List[str] = ["jpg", "jpeg", "png", "gif", "webp"]
+    UPLOAD_DIR: str = "static/uploads"
     
-    # ===== OTP & VERIFICATION =====
-    OTP_EXPIRE_MINUTES: int = int(os.getenv("OTP_EXPIRE_MINUTES", "10"))
-    OTP_MAX_ATTEMPTS: int = int(os.getenv("OTP_MAX_ATTEMPTS", "3"))
-    ENABLE_OTP: bool = os.getenv("ENABLE_OTP", "False").lower() == "true"
+    # Email
+    SMTP_SERVER: str = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", 587))
+    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    FROM_EMAIL: str = os.getenv("FROM_EMAIL", "noreply@bitemebuddy.com")
+    FROM_NAME: str = os.getenv("FROM_NAME", "Bite Me Buddy")
     
-    # ===== PASSWORD POLICY =====
-    MIN_PASSWORD_LENGTH: int = 8
-    REQUIRE_SPECIAL_CHAR: bool = True
-    REQUIRE_UPPERCASE: bool = True
-    REQUIRE_NUMBER: bool = True
+    # Site
+    SITE_URL: str = os.getenv("SITE_URL", "http://localhost:8000")
+    SITE_NAME: str = "Bite Me Buddy"
     
-    # ===== RENDER SPECIFIC =====
-    PORT: int = int(os.getenv("PORT", "8000"))
-    RENDER: bool = os.getenv("RENDER", "False").lower() == "true"
+    # Payment (Example: Razorpay)
+    RAZORPAY_KEY_ID: str = os.getenv("RAZORPAY_KEY_ID", "")
+    RAZORPAY_KEY_SECRET: str = os.getenv("RAZORPAY_KEY_SECRET", "")
     
-    # ===== LOGGING =====
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOG_FILE: str = os.path.join(BASE_DIR, "logs", "app.log")
+    # SMS (Example: Twilio)
+    TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "")
+    TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN", "")
+    TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER", "")
     
-    # ===== RATE LIMITING =====
-    RATE_LIMIT_PER_MINUTE: int = 60
-    RATE_LIMIT_PER_HOUR: int = 1000
+    # Google Maps
+    GOOGLE_MAPS_API_KEY: str = os.getenv("GOOGLE_MAPS_API_KEY", "")
     
-    # ===== SESSION CONFIG =====
-    SESSION_TIMEOUT_MINUTES: int = 30
-    COOKIE_SECURE: bool = os.getenv("COOKIE_SECURE", "False").lower() == "true"
+    # Redis (for caching)
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
     
-    # ===== EMAIL CONFIG (Future) =====
-    SMTP_HOST: Optional[str] = os.getenv("SMTP_HOST")
-    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
-    SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
-    SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD")
-    EMAIL_FROM: Optional[str] = os.getenv("EMAIL_FROM")
+    # Cache
+    CACHE_TTL: int = 300  # 5 minutes
     
-    # ===== PAYMENT GATEWAY (Future) =====
-    STRIPE_SECRET_KEY: Optional[str] = os.getenv("STRIPE_SECRET_KEY")
-    STRIPE_PUBLISHABLE_KEY: Optional[str] = os.getenv("STRIPE_PUBLISHABLE_KEY")
-    RAZORPAY_KEY_ID: Optional[str] = os.getenv("RAZORPAY_KEY_ID")
-    RAZORPAY_KEY_SECRET: Optional[str] = os.getenv("RAZORPAY_KEY_SECRET")
-
-    # ===== MODEL VALIDATION CONFIG =====
+    # Security
+    PASSWORD_RESET_TIMEOUT: int = 3600  # 1 hour
+    OTP_EXPIRY_MINUTES: int = 10
+    MAX_LOGIN_ATTEMPTS: int = 5
+    LOCKOUT_TIME_MINUTES: int = 15
+    
+    # Business Logic
+    TAX_RATE: float = 0.18  # 18% GST
+    BASE_DELIVERY_CHARGE: float = 20.0
+    FREE_DELIVERY_THRESHOLD: float = 500.0
+    DEFAULT_PREPARATION_TIME: int = 30  # minutes
+    
+    # Order
+    DEFAULT_DELIVERY_TIME: int = 45  # minutes
+    ORDER_STATUS_UPDATE_DELAY: int = 5  # minutes between status updates
+    
+    # Commission
+    COMMISSION_RATE: float = 0.10  # 10% commission on orders
+    
     class Config:
         env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-        
-        @classmethod
-        def customise_sources(cls, init_settings, env_settings, file_secret_settings):
-            # Priority: env_settings > init_settings > file_secret_settings
-            return env_settings, init_settings, file_secret_settings
-
+        case_sensitive = True
 
 # Create settings instance
 settings = Settings()
 
-# Post-initialization setup
-def setup_environment():
-    """Setup environment after settings are loaded"""
-    
-    # Create upload directory if it doesn't exist
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-    
-    # Create logs directory
-    logs_dir = os.path.join(BASE_DIR, "logs")
-    os.makedirs(logs_dir, exist_ok=True)
-    
-    # Print configuration in debug mode
-    if settings.DEBUG:
-        print("=" * 50)
-        print(f"🚀 {settings.APP_NAME} Configuration")
-        print("=" * 50)
-        print(f"Environment: {settings.ENVIRONMENT}")
-        print(f"Debug Mode: {settings.DEBUG}")
-        print(f"Database URL: {settings.DATABASE_URL[:50]}...")
-        print(f"CORS Origins: {settings.CORS_ORIGINS}")
-        print(f"Upload Directory: {settings.UPLOAD_DIR}")
-        print(f"Running on Render: {settings.RENDER}")
-        print("=" * 50)
-
-# Run setup
-setup_environment()
+# Export configuration
+def get_settings() -> Settings:
+    return settings
