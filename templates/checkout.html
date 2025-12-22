@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="/cart">Cart</a></li>
+                <li class="breadcrumb-item active">Checkout</li>
+            </ol>
+        </nav>
+        
+        <h2 class="text-primary"><i class="fas fa-shopping-bag"></i> Checkout</h2>
+        <p class="lead">Complete your order</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Order Summary -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-receipt"></i> Order Summary</h5>
+            </div>
+            <div class="card-body">
+                <div id="checkout-summary">
+                    <p class="text-center text-muted">Loading order details...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delivery Information -->
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-truck"></i> Delivery Information</h5>
+            </div>
+            <div class="card-body">
+                <form id="deliveryForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="fullName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="phoneNumber" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Delivery Address *</label>
+                        <textarea class="form-control" id="deliveryAddress" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">City *</label>
+                                <input type="text" class="form-control" id="city" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Pincode *</label>
+                                <input type="text" class="form-control" id="pincode" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Delivery Instructions</label>
+                        <textarea class="form-control" id="instructions" rows="2" placeholder="Any special instructions for delivery"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Preferred Delivery Time</label>
+                        <select class="form-select" id="deliveryTime">
+                            <option value="asap">As Soon As Possible</option>
+                            <option value="30min">Within 30 minutes</option>
+                            <option value="1hour">Within 1 hour</option>
+                            <option value="2hours">Within 2 hours</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Payment Summary -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-credit-card"></i> Payment Summary</h5>
+            </div>
+            <div class="card-body">
+                <div id="payment-summary">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span id="payment-subtotal">₹0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Delivery Charge</span>
+                        <span id="payment-delivery">₹30.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax (5%)</span>
+                        <span id="payment-tax">₹0.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total Amount</strong>
+                        <strong id="payment-total">₹0.00</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payment Method -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-wallet"></i> Payment Method</h5>
+            </div>
+            <div class="card-body">
+                <div class="payment-methods">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="cod" checked>
+                        <label class="form-check-label" for="cod">
+                            <i class="fas fa-money-bill-wave"></i> Cash on Delivery
+                        </label>
+                        <p class="small text-muted mb-0">Pay when you receive your order</p>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="paymentMethod" id="card" value="card">
+                        <label class="form-check-label" for="card">
+                            <i class="fas fa-credit-card"></i> Credit/Debit Card
+                        </label>
+                        <p class="small text-muted mb-0">Secure card payment</p>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="paymentMethod" id="upi" value="upi">
+                        <label class="form-check-label" for="upi">
+                            <i class="fas fa-mobile-alt"></i> UPI Payment
+                        </label>
+                        <p class="small text-muted mb-0">Pay via UPI apps</p>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="paymentMethod" id="netbanking" value="netbanking">
+                        <label class="form-check-label" for="netbanking">
+                            <i class="fas fa-university"></i> Net Banking
+                        </label>
+                        <p class="small text-muted mb-0">Online bank transfer</p>
+                    </div>
+                </div>
+                
+                <!-- Card Payment Form (Hidden by default) -->
+                <div id="card-payment-form" style="display: none; margin-top: 20px;">
+                    <div class="mb-3">
+                        <label class="form-label">Card Number</label>
+                        <input type="text" class="form-control" placeholder="1234 5678 9012 3456">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Expiry Date</label>
+                                <input type="text" class="form-control" placeholder="MM/YY">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">CVV</label>
+                                <input type="text" class="form-control" placeholder="123">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- UPI Payment Form (Hidden by default) -->
+                <div id="upi-payment-form" style="display: none; margin-top: 20px;">
+                    <div class="mb-3">
+                        <label class="form-label">UPI ID</label>
+                        <input type="text" class="form-control" placeholder="username@upi">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Place Order Button -->
+        <div class="d-grid">
+            <button class="btn btn-success btn-lg" onclick="placeOrder()">
+                <i class="fas fa-lock"></i> Place Order
+            </button>
+            <a href="/cart" class="btn btn-outline-secondary mt-2">
+                <i class="fas fa-arrow-left"></i> Back to Cart
+            </a>
+        </div>
+        
+        <!-- Security Note -->
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-shield-alt"></i>
+            <small>Your payment information is secure and encrypted.</small>
+        </div>
+    </div>
+</div>
+
+<script>
+    let orderData = {};
+    
+    function loadOrderData() {
+        // Load order data from localStorage
+        let savedOrder = localStorage.getItem('bite_me_buddy_order');
+        let savedCart = localStorage.getItem('bite_me_buddy_cart');
+        
+        if (!savedOrder || !savedCart) {
+            alert('No order data found. Please add items to cart first.');
+            window.location.href = '/cart';
+            return;
+        }
+        
+        orderData = JSON.parse(savedOrder);
+        let cart = JSON.parse(savedCart);
+        
+        // Render order summary
+        renderOrderSummary(cart);
+        
+        // Set payment summary
+        document.getElementById('payment-subtotal').textContent = '₹' + orderData.subtotal.toFixed(2);
+        document.getElementById('payment-delivery').textContent = '₹' + orderData.deliveryCharge.toFixed(2);
+        document.getElementById('payment-tax').textContent = '₹' + orderData.tax.toFixed(2);
+        document.getElementById('payment-total').textContent = '₹' + orderData.total.toFixed(2);
+        
+        // Try to load user info if logged in
+        loadUserInfo();
+    }
+    
+    function renderOrderSummary(cart) {
+        let container = document.getElementById('checkout-summary');
+        let html = '<div class="table-responsive"><table class="table">';
+        html += '<thead><tr><th>Item</th><th>Quantity</th><th>Price</th><th>Total</th></tr></thead>';
+        html += '<tbody>';
+        
+        let itemCount = 0;
+        for (let itemId in cart) {
+            let item = cart[itemId];
+            itemCount++;
+            let total = item.price * item.quantity;
+            
+            html += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>₹${item.price.toFixed(2)}</td>
+                    <td>₹${total.toFixed(2)}</td>
+                </tr>
+            `;
+        }
+        
+        html += '</tbody></table></div>';
+        
+        if (itemCount === 0) {
+            html = `
+                <div class="text-center py-3">
+                    <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                    <h5>No items in cart</h5>
+                    <a href="/services" class="btn btn-primary">Browse Services</a>
+                </div>
+            `;
+        }
+        
+        container.innerHTML = html;
+    }
+    
+    function loadUserInfo() {
+        // In real app, fetch user info from API
+        // For now, we'll use localStorage or leave empty
+        let userInfo = JSON.parse(localStorage.getItem('bite_me_buddy_user') || '{}');
+        
+        if (userInfo.name) {
+            document.getElementById('fullName').value = userInfo.name;
+            document.getElementById('phoneNumber').value = userInfo.phone || '';
+            document.getElementById('deliveryAddress').value = userInfo.address || '';
+        }
+    }
+    
+    // Show/hide payment method forms
+    document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Hide all payment forms
+            document.getElementById('card-payment-form').style.display = 'none';
+            document.getElementById('upi-payment-form').style.display = 'none';
+            
+            // Show selected payment form
+            if (this.value === 'card') {
+                document.getElementById('card-payment-form').style.display = 'block';
+            } else if (this.value === 'upi') {
+                document.getElementById('upi-payment-form').style.display = 'block';
+            }
+        });
+    });
+    
+    function placeOrder() {
+        // Validate form
+        if (!validateForm()) {
+            return;
+        }
+        
+        // Collect form data
+        let formData = {
+            delivery: {
+                name: document.getElementById('fullName').value,
+                phone: document.getElementById('phoneNumber').value,
+                address: document.getElementById('deliveryAddress').value,
+                city: document.getElementById('city').value,
+                pincode: document.getElementById('pincode').value,
+                instructions: document.getElementById('instructions').value,
+                deliveryTime: document.getElementById('deliveryTime').value
+            },
+            payment: {
+                method: document.querySelector('input[name="paymentMethod"]:checked').value
+            },
+            order: orderData
+        };
+        
+        // Show loading
+        let btn = document.querySelector('button[onclick="placeOrder()"]');
+        let originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        btn.disabled = true;
+        
+        // Simulate API call
+        setTimeout(() => {
+            // In real app: fetch('/api/orders', { method: 'POST', body: JSON.stringify(formData) })
+            
+            // Clear cart and order data
+            localStorage.removeItem('bite_me_buddy_cart');
+            localStorage.removeItem('bite_me_buddy_order');
+            
+            // Show success message
+            alert('Order placed successfully! Your order ID: #' + Math.floor(Math.random() * 10000));
+            
+            // Redirect to order confirmation
+            window.location.href = '/order-confirmation';
+            
+            // Reset button
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 2000);
+    }
+    
+    function validateForm() {
+        let requiredFields = ['fullName', 'phoneNumber', 'deliveryAddress', 'city', 'pincode'];
+        
+        for (let fieldId of requiredFields) {
+            let field = document.getElementById(fieldId);
+            if (!field.value.trim()) {
+                alert(`Please fill in ${field.labels[0].textContent}`);
+                field.focus();
+                return false;
+            }
+        }
+        
+        // Validate phone number
+        let phone = document.getElementById('phoneNumber').value;
+        if (!/^\d{10}$/.test(phone.replace(/\D/g, ''))) {
+            alert('Please enter a valid 10-digit phone number');
+            return false;
+        }
+        
+        // Validate pincode
+        let pincode = document.getElementById('pincode').value;
+        if (!/^\d{6}$/.test(pincode)) {
+            alert('Please enter a valid 6-digit pincode');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Load order data on page load
+    document.addEventListener('DOMContentLoaded', loadOrderData);
+</script>
+{% endblock %}
