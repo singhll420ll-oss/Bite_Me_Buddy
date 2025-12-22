@@ -1,434 +1,100 @@
 {% extends "base.html" %}
 
-{% block title %}Register with Mobile - Bite Me Buddy{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-primary text-white text-center py-3">
-                    <h4 class="mb-0">
-                        <i class="fas fa-mobile-alt me-2"></i>Register with Mobile
-                    </h4>
-                    <p class="mb-0 small">Quick registration with mobile number</p>
-                </div>
-                <div class="card-body p-4">
-                    <!-- Mobile Registration Form -->
-                    <form id="mobileRegisterForm" method="post" action="/auth/register">
-                        {% csrf_token %}
-                        
-                        <!-- Response Message Container -->
-                        <div id="registerMessage" class="mb-3"></div>
-                        
-                        <!-- Mobile Number -->
-                        <div class="mb-3">
-                            <label for="mobile" class="form-label fw-bold">
-                                <i class="fas fa-phone me-2"></i>Mobile Number *
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light">+91</span>
-                                <input type="tel" 
-                                       class="form-control" 
-                                       id="mobile" 
-                                       name="mobile" 
-                                       placeholder="9876543210" 
-                                       pattern="[6-9]{1}[0-9]{9}" 
-                                       maxlength="10" 
-                                       required
-                                       oninput="validateMobile(this)">
-                            </div>
-                            <div class="form-text text-muted">
-                                <small>Enter 10-digit Indian mobile number starting with 6,7,8,9</small>
-                            </div>
-                            <div id="mobileError" class="invalid-feedback d-none">
-                                Please enter a valid 10-digit mobile number
-                            </div>
-                        </div>
-                        
-                        <!-- Full Name -->
-                        <div class="mb-3">
-                            <label for="name" class="form-label fw-bold">
-                                <i class="fas fa-user me-2"></i>Full Name
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="name" 
-                                   name="name" 
-                                   placeholder="Your Name (Optional)">
-                        </div>
-                        
-                        <!-- Email -->
-                        <div class="mb-3">
-                            <label for="email" class="form-label fw-bold">
-                                <i class="fas fa-envelope me-2"></i>Email Address
-                            </label>
-                            <input type="email" 
-                                   class="form-control" 
-                                   id="email" 
-                                   name="email" 
-                                   placeholder="your@email.com (Optional)">
-                        </div>
-                        
-                        <!-- Password -->
-                        <div class="mb-3">
-                            <label for="password" class="form-label fw-bold">
-                                <i class="fas fa-lock me-2"></i>Password *
-                            </label>
-                            <input type="password" 
-                                   class="form-control" 
-                                   id="password" 
-                                   name="password" 
-                                   placeholder="Create a password" 
-                                   minlength="6" 
-                                   required
-                                   oninput="checkPasswordStrength(this.value)">
-                            <div class="form-text text-muted">
-                                <small>Minimum 6 characters</small>
-                            </div>
-                            <div class="password-strength mt-2">
-                                <div class="progress" style="height: 5px;">
-                                    <div id="passwordStrength" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                                </div>
-                                <small id="passwordFeedback" class="text-muted"></small>
-                            </div>
-                        </div>
-                        
-                        <!-- Confirm Password -->
-                        <div class="mb-4">
-                            <label for="confirmPassword" class="form-label fw-bold">
-                                <i class="fas fa-lock me-2"></i>Confirm Password *
-                            </label>
-                            <input type="password" 
-                                   class="form-control" 
-                                   id="confirmPassword" 
-                                   name="confirm_password" 
-                                   placeholder="Confirm your password" 
-                                   minlength="6" 
-                                   required
-                                   oninput="checkPasswordMatch()">
-                            <div id="passwordMatch" class="form-text"></div>
-                        </div>
-                        
-                        <!-- Terms & Conditions -->
-                        <div class="mb-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="terms" required>
-                                <label class="form-check-label" for="terms">
-                                    I agree to the <a href="#" class="text-decoration-none">Terms & Conditions</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <!-- Submit Button -->
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg" id="registerBtn">
-                                <i class="fas fa-user-plus me-2"></i>Register Now
-                            </button>
-                        </div>
-                        
-                        <!-- Login Link -->
-                        <div class="text-center mt-4 pt-3 border-top">
-                            <p class="mb-0">
-                                Already have an account?
-                                <a href="/auth/login" class="text-decoration-none fw-bold">Login here</a>
-                            </p>
-                        </div>
-                    </form>
-                </div>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-user-plus"></i> New Registration</h4>
             </div>
-            
-            <!-- Alternative Options -->
-            <div class="text-center mt-4">
-                <p class="text-muted mb-2">Or continue with</p>
-                <div class="d-flex justify-content-center gap-3">
-                    <a href="#" class="btn btn-outline-dark btn-sm">
-                        <i class="fab fa-google me-1"></i> Google
-                    </a>
-                    <a href="#" class="btn btn-outline-primary btn-sm">
-                        <i class="fab fa-facebook me-1"></i> Facebook
-                    </a>
-                </div>
+            <div class="card-body">
+                <form action="/register" method="post">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username *</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                                <div class="form-text">Choose a unique username</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password *</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="confirm_password" class="form-label">Confirm Password *</label>
+                                <input type="password" class="form-control" id="confirm_password" required>
+                                <div class="form-text" id="password-match"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address *</label>
+                        <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                        <div class="form-text">Delivery address</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> Register
+                        </button>
+                        <a href="/login" class="btn btn-outline-secondary">
+                            <i class="fas fa-sign-in-alt"></i> Already have an account? Login
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('mobileRegisterForm');
-    const mobileInput = document.getElementById('mobile');
-    const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirmPassword');
-    const registerBtn = document.getElementById('registerBtn');
-    const messageDiv = document.getElementById('registerMessage');
-    
-    // Check mobile availability on blur
-    mobileInput.addEventListener('blur', async function() {
-        const mobile = mobileInput.value.trim();
-        if (mobile.length === 10 && /^[6-9]\d{9}$/.test(mobile)) {
-            try {
-                const response = await fetch(`/auth/check-mobile/${mobile}`);
-                const data = await response.json();
-                
-                if (!data.available) {
-                    showMessage('⚠️ This mobile number is already registered. Please login instead.', 'warning');
-                    mobileInput.classList.add('is-invalid');
-                } else {
-                    mobileInput.classList.remove('is-invalid');
-                    mobileInput.classList.add('is-valid');
-                }
-            } catch (error) {
-                console.error('Error checking mobile:', error);
-            }
+    // Password match validation
+    document.getElementById('confirm_password').addEventListener('input', function() {
+        let password = document.getElementById('password').value;
+        let confirm = this.value;
+        let matchDiv = document.getElementById('password-match');
+        
+        if (confirm === '') {
+            matchDiv.textContent = '';
+            matchDiv.className = 'form-text';
+        } else if (password === confirm) {
+            matchDiv.textContent = '✓ Passwords match';
+            matchDiv.className = 'form-text text-success';
+        } else {
+            matchDiv.textContent = '✗ Passwords do not match';
+            matchDiv.className = 'form-text text-danger';
         }
     });
-    
-    // Form submit handler
-    form.addEventListener('submit', async function(event) {
-        event.preventDefault();
-        
-        // Validate mobile
-        const mobile = mobileInput.value.trim();
-        if (!/^[6-9]\d{9}$/.test(mobile)) {
-            showMessage('❌ Please enter a valid 10-digit mobile number', 'danger');
-            mobileInput.focus();
-            return;
-        }
-        
-        // Validate password
-        const password = passwordInput.value;
-        if (password.length < 6) {
-            showMessage('❌ Password must be at least 6 characters', 'danger');
-            passwordInput.focus();
-            return;
-        }
-        
-        // Check password match
-        if (password !== confirmPasswordInput.value) {
-            showMessage('❌ Passwords do not match', 'danger');
-            confirmPasswordInput.focus();
-            return;
-        }
-        
-        // Check terms
-        if (!document.getElementById('terms').checked) {
-            showMessage('❌ Please accept Terms & Conditions', 'danger');
-            return;
-        }
-        
-        // Disable button and show loading
-        registerBtn.disabled = true;
-        registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Registering...';
-        
-        // Prepare data
-        const formData = {
-            mobile: mobile,
-            password: password,
-            name: document.getElementById('name').value.trim() || null,
-            email: document.getElementById('email').value.trim() || null,
-            role: 'customer'
-        };
-        
-        console.log('Registration data:', formData);
-        
-        try {
-            // Send to backend
-            const response = await fetch('/auth/register', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-            
-            const result = await response.json();
-            console.log('Registration response:', result);
-            
-            if (response.ok) {
-                // ✅ SUCCESS
-                showMessage('✅ ' + result.message, 'success');
-                
-                // Store user data in localStorage
-                localStorage.setItem('user_token', result.token.access_token);
-                localStorage.setItem('user_data', JSON.stringify(result.user));
-                
-                // Redirect to dashboard after 2 seconds
-                setTimeout(() => {
-                    window.location.href = '/dashboard';
-                }, 2000);
-                
-            } else {
-                // ❌ ERROR
-                const errorMsg = result.detail || 'Registration failed. Please try again.';
-                showMessage('❌ ' + errorMsg, 'danger');
-                registerBtn.disabled = false;
-                registerBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Register Now';
-            }
-            
-        } catch (error) {
-            console.error('Registration error:', error);
-            showMessage('❌ Network error. Please check your connection.', 'danger');
-            registerBtn.disabled = false;
-            registerBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Register Now';
-        }
-    });
-    
-    // Function to show messages
-    function showMessage(message, type) {
-        messageDiv.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        `;
-    }
-});
-
-// Mobile validation
-function validateMobile(input) {
-    const value = input.value.replace(/\D/g, '');
-    if (value.length > 10) {
-        input.value = value.substring(0, 10);
-    } else {
-        input.value = value;
-    }
-    
-    const isValid = /^[6-9]\d{9}$/.test(input.value);
-    if (isValid) {
-        input.classList.remove('is-invalid');
-        input.classList.add('is-valid');
-    } else if (input.value.length > 0) {
-        input.classList.add('is-invalid');
-        input.classList.remove('is-valid');
-    } else {
-        input.classList.remove('is-invalid', 'is-valid');
-    }
-}
-
-// Password strength checker
-function checkPasswordStrength(password) {
-    const strengthBar = document.getElementById('passwordStrength');
-    const feedback = document.getElementById('passwordFeedback');
-    
-    let strength = 0;
-    let feedbackText = '';
-    let color = '';
-    
-    if (password.length >= 6) strength += 25;
-    if (/[A-Z]/.test(password)) strength += 25;
-    if (/[0-9]/.test(password)) strength += 25;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 25;
-    
-    if (strength <= 25) {
-        feedbackText = 'Weak';
-        color = 'bg-danger';
-    } else if (strength <= 50) {
-        feedbackText = 'Fair';
-        color = 'bg-warning';
-    } else if (strength <= 75) {
-        feedbackText = 'Good';
-        color = 'bg-info';
-    } else {
-        feedbackText = 'Strong';
-        color = 'bg-success';
-    }
-    
-    strengthBar.style.width = strength + '%';
-    strengthBar.className = `progress-bar ${color}`;
-    feedback.textContent = feedbackText;
-}
-
-// Password match checker
-function checkPasswordMatch() {
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const matchDiv = document.getElementById('passwordMatch');
-    
-    if (confirmPassword.length === 0) {
-        matchDiv.textContent = '';
-        matchDiv.className = 'form-text';
-    } else if (password === confirmPassword) {
-        matchDiv.textContent = '✓ Passwords match';
-        matchDiv.className = 'form-text text-success';
-    } else {
-        matchDiv.textContent = '✗ Passwords do not match';
-        matchDiv.className = 'form-text text-danger';
-    }
-}
 </script>
-
-<style>
-.card {
-    border-radius: 15px;
-    overflow: hidden;
-}
-
-.card-header {
-    border-radius: 15px 15px 0 0 !important;
-}
-
-.input-group-text {
-    border-right: none;
-}
-
-.form-control {
-    border-left: none;
-    padding-left: 5px;
-}
-
-.form-control:focus {
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
-    border-color: #86b7fe;
-}
-
-.is-valid {
-    border-color: #198754 !important;
-}
-
-.is-invalid {
-    border-color: #dc3545 !important;
-}
-
-.password-strength {
-    margin-top: 5px;
-}
-
-.progress {
-    height: 5px;
-    margin-bottom: 5px;
-}
-
-.alert {
-    border-radius: 10px;
-    animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.btn-lg {
-    padding: 12px 24px;
-    font-weight: 600;
-    border-radius: 10px;
-}
-
-.btn-outline-dark, .btn-outline-primary {
-    border-radius: 20px;
-    padding: 8px 20px;
-}
-
-@media (max-width: 768px) {
-    .container {
-        padding: 15px;
-    }
-    
-    .card-body {
-        padding: 20px !important;
-    }
-}
-</style>
 {% endblock %}
