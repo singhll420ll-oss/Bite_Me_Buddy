@@ -1,254 +1,186 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard - Bite Me Buddy{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="admin-panel">
-    <h2 class="mb-3">
-        <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
-    </h2>
-    <p class="lead mb-0">Welcome back, Admin! Manage your restaurant efficiently.</p>
-</div>
-
-<!-- Admin Navigation -->
-<div class="admin-nav">
-    <a href="/admin/dashboard" class="active">
-        <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-    </a>
-    <a href="/admin/services">
-        <i class="fas fa-concierge-bell me-1"></i>Services
-    </a>
-    <a href="/admin/orders">
-        <i class="fas fa-shopping-cart me-1"></i>Orders
-    </a>
-    <a href="/admin/team-members">
-        <i class="fas fa-users me-1"></i>Team Members
-    </a>
-    <a href="/customers">
-        <i class="fas fa-user-friends me-1"></i>Customers
-    </a>
-    <a href="/admin/reports/online-time">
-        <i class="fas fa-chart-line me-1"></i>Reports
-    </a>
-</div>
-
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="card bg-primary text-white">
+<div class="row">
+    <div class="col-md-3">
+        <!-- Admin Sidebar -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-user-shield"></i> Admin Panel</h5>
+            </div>
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title">Total Orders</h6>
-                        <h2 class="mb-0">{{ order_stats.total_orders }}</h2>
-                    </div>
-                    <i class="fas fa-shopping-cart fa-3x opacity-50"></i>
+                <h6>Administrator</h6>
+                <p class="text-muted">{{ user.email }}</p>
+                <hr>
+                <div class="d-grid gap-2">
+                    <a href="/admin/dashboard" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a href="/admin/services" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-list"></i> Manage Services
+                    </a>
+                    <a href="/admin/customers" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-users"></i> Manage Customers
+                    </a>
+                    <a href="/logout" class="btn btn-outline-dark btn-sm">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="col-md-3 mb-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title">Total Revenue</h6>
-                        <h2 class="mb-0">₹{{ "%.2f"|format(order_stats.total_revenue) }}</h2>
-                    </div>
-                    <i class="fas fa-rupee-sign fa-3x opacity-50"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card bg-warning text-dark">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title">Avg Order Value</h6>
-                        <h2 class="mb-0">₹{{ "%.2f"|format(order_stats.avg_order_value) }}</h2>
-                    </div>
-                    <i class="fas fa-chart-bar fa-3x opacity-50"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-3">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title">Active Team</h6>
-                        <h2 class="mb-0">{{ team_members|length }}</h2>
-                    </div>
-                    <i class="fas fa-users fa-3x opacity-50"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Order Status Distribution -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-pie me-2"></i>Order Status Distribution
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    {% for status, count in order_stats.status_distribution.items() %}
-                    <div class="col-6 mb-2">
+    <div class="col-md-9">
+        <!-- Admin Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
                         <div class="d-flex justify-content-between">
-                            <span class="badge status-{{ status }}">{{ status|title }}</span>
-                            <strong>{{ count }}</strong>
+                            <div>
+                                <h6 class="card-title">Customers</h6>
+                                <h2>{{ stats.customers }}</h2>
+                            </div>
+                            <i class="fas fa-users fa-3x opacity-50"></i>
                         </div>
-                        <div class="progress mt-1" style="height: 8px;">
-                            <div class="progress-bar bg-{{ status }}" 
-                                 style="width: {{ (count / order_stats.total_orders * 100) if order_stats.total_orders > 0 else 0 }}%">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Total Orders</h6>
+                                <h2>{{ stats.orders }}</h2>
+                            </div>
+                            <i class="fas fa-shopping-cart fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Team Members</h6>
+                                <h2>{{ stats.team_members }}</h2>
+                            </div>
+                            <i class="fas fa-user-tie fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Pending Orders</h6>
+                                <h2>{{ stats.pending_orders }}</h2>
+                            </div>
+                            <i class="fas fa-clock fa-3x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Orders -->
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Recent Orders</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>
+                                        {% if order.customer %}
+                                            {{ order.customer.name }}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    </td>
+                                    <td>₹{{ order.total_amount }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 
+                                            'warning' if order.status == 'pending' 
+                                            else 'info' if order.status == 'confirmed' 
+                                            else 'primary' if order.status == 'preparing' 
+                                            else 'success' if order.status == 'delivered' 
+                                            else 'danger' 
+                                        }}">
+                                            {{ order.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ order.created_at.strftime('%d %b %Y %H:%M') }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No orders found.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Recent Customers -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-users"></i> Recent Customers</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_customers %}
+                    <div class="row">
+                        {% for customer in recent_customers %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>{{ customer.name }}</h6>
+                                    <p class="text-muted small mb-1">{{ customer.email }}</p>
+                                    <p class="text-muted small">{{ customer.phone }}</p>
+                                    <a href="/customer/{{ customer.id }}" class="btn btn-sm btn-outline-primary w-100">
+                                        View Details
+                                    </a>
+                                </div>
                             </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-clock me-2"></i>Online Time Report
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm report-table">
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Role</th>
-                                <th>Total Time</th>
-                                <th>Avg Session</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in online_report %}
-                            <tr>
-                                <td>
-                                    <span class="online-indicator {% if user.last_login %}online{% else %}offline{% endif %}"></span>
-                                    {{ user.name }}
-                                </td>
-                                <td>{{ user.role|title }}</td>
-                                <td>{{ "%.1f"|format(user.total_time_minutes) }} min</td>
-                                <td>{{ "%.1f"|format(user.avg_session_minutes) }} min</td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="4" class="text-center text-muted">No data available</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Orders -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">
-            <i class="fas fa-shopping-cart me-2"></i>Recent Orders
-        </h5>
-        <a href="/admin/orders" class="btn btn-sm btn-primary">
-            View All <i class="fas fa-arrow-right ms-1"></i>
-        </a>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Order #</th>
-                        <th>Customer</th>
-                        <th>Service</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in recent_orders %}
-                    <tr>
-                        <td>
-                            <a href="#" class="text-decoration-none">{{ order.order_number }}</a>
-                        </td>
-                        <td>{{ order.customer.name }}</td>
-                        <td>{{ order.service.name }}</td>
-                        <td>₹{{ "%.2f"|format(order.total_amount) }}</td>
-                        <td>
-                            <span class="badge status-{{ order.status }}">
-                                {{ order.status|title }}
-                            </span>
-                        </td>
-                        <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">No recent orders</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="row">
-    <div class="col-md-4 mb-3">
-        <div class="card">
-            <div class="card-body text-center">
-                <i class="fas fa-plus-circle fa-3x text-primary mb-3"></i>
-                <h5>Add New Service</h5>
-                <p class="text-muted">Create a new food service</p>
-                <a href="/admin/services" class="btn btn-outline-primary w-100">
-                    Go to Services
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4 mb-3">
-        <div class="card">
-            <div class="card-body text-center">
-                <i class="fas fa-user-plus fa-3x text-success mb-3"></i>
-                <h5>Add Team Member</h5>
-                <p class="text-muted">Add new delivery team member</p>
-                <a href="/admin/team-members" class="btn btn-outline-success w-100">
-                    Manage Team
-                </a>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4 mb-3">
-        <div class="card">
-            <div class="card-body text-center">
-                <i class="fas fa-chart-line fa-3x text-warning mb-3"></i>
-                <h5>View Reports</h5>
-                <p class="text-muted">Detailed analytics and reports</p>
-                <a href="/admin/reports/online-time" class="btn btn-outline-warning w-100">
-                    View Reports
-                </a>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No customers found.
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
