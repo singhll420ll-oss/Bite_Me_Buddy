@@ -1,0 +1,156 @@
+￼Enter file contents here
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <!-- Team Sidebar -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-user-tie"></i> Team Member</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ user.name }}</h6>
+                <p class="text-muted">{{ user.phone }}</p>
+                <hr>
+                <div class="d-grid gap-2">
+                    <a href="/team/dashboard" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a href="/logout" class="btn btn-outline-dark btn-sm">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Today's Stats -->
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Today's Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <h3>{{ assigned_orders|length }}</h3>
+                    <p class="text-muted">Assigned Orders</p>
+                    <hr>
+                    <h3>{{ plans|length }}</h3>
+                    <p class="text-muted">Today's Plans</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <!-- Assigned Orders -->
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list"></i> Your Assigned Orders</h5>
+            </div>
+            <div class="card-body">
+                {% if assigned_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Address</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in assigned_orders %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>
+                                        {% if order.customer %}
+                                            {{ order.customer.name }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ order.address|truncate(30) }}</small>
+                                    </td>
+                                    <td>₹{{ order.total_amount }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 
+                                            'info' if order.status == 'confirmed' 
+                                            else 'primary' if order.status == 'preparing' 
+                                            else 'warning' if order.status == 'out_for_delivery' 
+                                            else 'success' if order.status == 'delivered' 
+                                            else 'danger' 
+                                        }}">
+                                            {{ order.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if order.status == 'out_for_delivery' %}
+                                            <button class="btn btn-sm btn-success" 
+                                                    hx-post="/orders/{{ order.id }}/deliver"
+                                                    hx-target="#order-{{ order.id }}">
+                                                <i class="fas fa-check"></i> Confirm Delivery
+                                            </button>
+                                        {% elif order.status == 'preparing' %}
+                                            <button class="btn btn-sm btn-primary"
+                                                    hx-post="/orders/{{ order.id }}/out-for-delivery">
+                                                <i class="fas fa-motorcycle"></i> Start Delivery
+                                            </button>
+                                        {% elif order.status == 'confirmed' %}
+                                            <button class="btn btn-sm btn-info"
+                                                    hx-post="/orders/{{ order.id }}/preparing">
+                                                <i class="fas fa-utensils"></i> Start Preparing
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        No orders assigned to you at the moment.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Today's Plans -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Today's Plans</h5>
+            </div>
+            <div class="card-body">
+                {% if plans %}
+                    <div class="row">
+                        {% for plan in plans %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Plan #{{ plan.id }}</h6>
+                                    <p>{{ plan.description }}</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock"></i> 
+                                        {{ plan.created_at.strftime('%H:%M') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-calendar-times"></i> 
+                        No plans for today.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
