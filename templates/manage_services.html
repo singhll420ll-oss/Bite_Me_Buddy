@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/admin/dashboard">Admin Dashboard</a></li>
+                <li class="breadcrumb-item active">Manage Services</li>
+            </ol>
+        </nav>
+        
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="text-primary"><i class="fas fa-list"></i> Manage Services</h2>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                <i class="fas fa-plus"></i> Add New Service
+            </button>
+        </div>
+        <p class="lead">Add, edit, or delete food services</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">All Services</h5>
+            </div>
+            <div class="card-body">
+                {% if services %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Menu Items</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for service in services %}
+                                <tr>
+                                    <td>{{ service.id }}</td>
+                                    <td>
+                                        {% if service.image_url %}
+                                            <img src="{{ service.image_url }}" alt="{{ service.name }}" 
+                                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                                        {% else %}
+                                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center" 
+                                                 style="width: 50px; height: 50px; border-radius: 5px;">
+                                                <i class="fas fa-utensils"></i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ service.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ service.description|truncate(50) if service.description else 'No description' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ service.menu_items|length if service.menu_items else 0 }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{ service.created_at.strftime('%d %b %Y') }}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    onclick="editService({{ service.id }})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success"
+                                                    onclick="manageMenu({{ service.id }})">
+                                                <i class="fas fa-utensils"></i> Menu
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    onclick="deleteService({{ service.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-list fa-4x text-muted mb-3"></i>
+                        <h4>No Services Found</h4>
+                        <p class="text-muted">Add your first service to get started.</p>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="fas fa-plus"></i> Add Service
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Service Modal -->
+<div class="modal fade" id="addServiceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-plus"></i> Add New Service</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addServiceForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="serviceName" class="form-label">Service Name *</label>
+                        <input type="text" class="form-control" id="serviceName" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="serviceDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="serviceDescription" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="serviceImage" class="form-label">Service Image</label>
+                        <input type="file" class="form-control" id="serviceImage" name="image" accept="image/*">
+                        <div class="form-text">Recommended size: 400x300 pixels</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add Service</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Service Modal -->
+<div class="modal fade" id="editServiceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Service</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editServiceForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" id="editServiceId" name="id">
+                    
+                    <div class="mb-3">
+                        <label for="editServiceName" class="form-label">Service Name *</label>
+                        <input type="text" class="form-control" id="editServiceName" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editServiceDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editServiceDescription" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editServiceImage" class="form-label">Service Image</label>
+                        <input type="file" class="form-control" id="editServiceImage" name="image" accept="image/*">
+                        <div class="form-text">Leave empty to keep current image</div>
+                        <div id="currentImagePreview" class="mt-2"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function editService(serviceId) {
+        // In real implementation, fetch service data via AJAX
+        // For now, we'll use dummy data
+        document.getElementById('editServiceId').value = serviceId;
+        document.getElementById('editServiceName').value = 'Service ' + serviceId;
+        document.getElementById('editServiceDescription').value = 'Description for service ' + serviceId;
+        
+        // Show current image if available
+        document.getElementById('currentImagePreview').innerHTML = `
+            <small>Current Image:</small><br>
+            <img src="/static/images/service${serviceId}.jpg" alt="Current" 
+                 style="width: 100px; height: 75px; object-fit: cover; border-radius: 5px;" 
+                 onerror="this.style.display='none'">
+        `;
+        
+        let editModal = new bootstrap.Modal(document.getElementById('editServiceModal'));
+        editModal.show();
+    }
+    
+    function manageMenu(serviceId) {
+        // Redirect to menu management page
+        window.location.href = `/admin/service/${serviceId}/menu`;
+    }
+    
+    function deleteService(serviceId) {
+        if (confirm(`Are you sure you want to delete service #${serviceId}? This will also delete all menu items under this service.`)) {
+            // Make API call to delete service
+            alert(`Service #${serviceId} deletion request sent.`);
+            
+            // In real implementation:
+            // fetch(`/admin/services/${serviceId}`, { method: 'DELETE' })
+            //     .then(response => {
+            //         if (response.ok) {
+            //             location.reload();
+            //         }
+            //     });
+        }
+    }
+    
+    // Handle add service form submission
+    document.getElementById('addServiceForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // In real implementation, send form data via AJAX
+        alert('New service would be added here.');
+        
+        // Example AJAX call:
+        // let formData = new FormData(this);
+        // fetch('/admin/services', {
+        //     method: 'POST',
+        //     body: formData
+        // }).then(response => {
+        //     if (response.ok) {
+        //         location.reload();
+        //     }
+        // });
+        
+        let modal = bootstrap.Modal.getInstance(document.getElementById('addServiceModal'));
+        modal.hide();
+    });
+    
+    // Handle edit service form submission
+    document.getElementById('editServiceForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let serviceId = document.getElementById('editServiceId').value;
+        alert(`Service #${serviceId} would be updated here.`);
+        
+        // Example AJAX call:
+        // let formData = new FormData(this);
+        // fetch(`/admin/services/${serviceId}`, {
+        //     method: 'PUT',
+        //     body: formData
+        // }).then(response => {
+        //     if (response.ok) {
+        //         location.reload();
+        //     }
+        // });
+        
+        let modal = bootstrap.Modal.getInstance(document.getElementById('editServiceModal'));
+        modal.hide();
+    });
+</script>
+{% endblock %}
