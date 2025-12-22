@@ -1,210 +1,406 @@
+
 {% extends "base.html" %}
 
-{% block title %}{{ customer.name }} - Customer Details{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h2 class="mb-2">
-                <i class="fas fa-user me-2"></i>{{ customer.name }}
-            </h2>
-            <p class="lead mb-0">Customer Details & Order History</p>
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/admin/dashboard">Admin Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/admin/customers">Customers</a></li>
+                <li class="breadcrumb-item active">Customer Details</li>
+            </ol>
+        </nav>
+        
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="text-primary"><i class="fas fa-user"></i> Customer Details</h2>
+            <div class="btn-group">
+                <button class="btn btn-outline-primary" onclick="printCustomerDetails()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button class="btn btn-outline-success" onclick="exportCustomerData()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+            </div>
         </div>
-        <a href="/customers" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Customers
-        </a>
     </div>
 </div>
 
-<!-- Customer Information -->
-<div class="row mb-4">
+<div class="row">
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-id-card me-2"></i>Contact Information
-                </h5>
+        <!-- Customer Profile Card -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-id-card"></i> Profile Information</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <div class="customer-avatar">
+                        <i class="fas fa-user-circle fa-5x text-primary"></i>
+                    </div>
+                </div>
+                
+                <h4 id="customerName">Customer #{{ customer_id }}</h4>
+                <p class="text-muted" id="customerEmail">Loading...</p>
+                
+                <div class="customer-info mt-4 text-start">
+                    <p><strong><i class="fas fa-phone"></i> Phone:</strong> <span id="customerPhone">Loading...</span></p>
+                    <p><strong><i class="fas fa-map-marker-alt"></i> Address:</strong> <span id="customerAddress">Loading...</span></p>
+                    <p><strong><i class="fas fa-calendar"></i> Registered:</strong> <span id="customerRegistered">Loading...</span></p>
+                    <p><strong><i class="fas fa-user-tag"></i> Username:</strong> <span id="customerUsername">Loading...</span></p>
+                </div>
+                
+                <hr>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="editCustomer()">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                    <button class="btn btn-success" onclick="sendMessage()">
+                        <i class="fas fa-envelope"></i> Send Message
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customer Stats -->
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Statistics</h5>
             </div>
             <div class="card-body">
-                <table class="table table-sm">
-                    <tr>
-                        <th><i class="fas fa-user me-1"></i>Username:</th>
-                        <td>{{ customer.username }}</td>
-                    </tr>
-                    <tr>
-                        <th><i class="fas fa-envelope me-1"></i>Email:</th>
-                        <td>{{ customer.email or 'Not provided' }}</td>
-                    </tr>
-                    <tr>
-                        <th><i class="fas fa-phone me-1"></i>Phone:</th>
-                        <td>{{ customer.phone }}</td>
-                    </tr>
-                    <tr>
-                        <th><i class="fas fa-home me-1"></i>Address:</th>
-                        <td>{{ customer.address or 'Not provided' }}</td>
-                    </tr>
-                    <tr>
-                        <th><i class="fas fa-calendar me-1"></i>Joined:</th>
-                        <td>{{ customer.created_at.strftime('%Y-%m-%d') }}</td>
-                    </tr>
-                </table>
+                <div class="text-center">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <h3 id="totalOrdersCount">0</h3>
+                            <p class="text-muted small">Total Orders</p>
+                        </div>
+                        <div class="col-6">
+                            <h3 id="totalSpent">₹0</h3>
+                            <p class="text-muted small">Total Spent</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <h3 id="avgOrderValue">₹0</h3>
+                            <p class="text-muted small">Avg. Order</p>
+                        </div>
+                        <div class="col-6">
+                            <h3 id="lastOrderDays">0</h3>
+                            <p class="text-muted small">Days Since Last Order</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div id="customerStatus" class="badge bg-success">Active</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     
     <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-bar me-2"></i>Order Statistics
-                </h5>
+        <!-- Customer Orders -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-shopping-cart"></i> Order History</h5>
             </div>
             <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-4 mb-3">
-                        <div class="p-3 border rounded">
-                            <h2 class="text-primary">{{ stats.total_orders }}</h2>
-                            <p class="mb-0 text-muted">Total Orders</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="p-3 border rounded">
-                            <h2 class="text-success">₹{{ "%.2f"|format(stats.total_spent) }}</h2>
-                            <p class="mb-0 text-muted">Total Spent</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="p-3 border rounded">
-                            <h2 class="text-warning">
-                                {% if stats.last_order_date %}
-                                    {{ stats.last_order_date.strftime('%Y-%m-%d') }}
-                                {% else %}
-                                    Never
-                                {% endif %}
-                            </h2>
-                            <p class="mb-0 text-muted">Last Order</p>
-                        </div>
-                    </div>
+                <div id="ordersContainer">
+                    <p class="text-center text-muted">Loading orders...</p>
                 </div>
-                
-                {% if stats.total_orders > 0 %}
-                <div class="mt-3">
-                    <h6>Average Order Value:</h6>
-                    <div class="progress" style="height: 20px;">
-                        <div class="progress-bar bg-info" 
-                             style="width: {{ (stats.total_spent / stats.total_orders / 1000 * 100) if stats.total_orders > 0 else 0 }}%">
-                            ₹{{ "%.2f"|format(stats.total_spent / stats.total_orders) if stats.total_orders > 0 else 0 }}
+            </div>
+        </div>
+        
+        <!-- Customer Activity -->
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Activity Timeline</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline" id="activityTimeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6>Account Created</h6>
+                            <p class="text-muted small">Customer registered on the platform</p>
+                            <small class="text-muted">Just now</small>
                         </div>
                     </div>
+                    <!-- More timeline items would be added dynamically -->
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Order History -->
-<div class="card mb-4">
-    <div class="card-header bg-warning text-dark">
-        <h5 class="mb-0">
-            <i class="fas fa-history me-2"></i>Order History (Last 50 Orders)
-        </h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Order #</th>
-                        <th>Service</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th>Assigned To</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders %}
-                    <tr>
-                        <td>
-                            <a href="#" class="text-decoration-none">{{ order.order_number }}</a>
-                        </td>
-                        <td>{{ order.service.name }}</td>
-                        <td>₹{{ "%.2f"|format(order.total_amount) }}</td>
-                        <td>
-                            <span class="badge status-{{ order.status }}">
-                                {{ order.status|title }}
-                            </span>
-                        </td>
-                        <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>
-                            {% if order.assigned_to_user %}
-                                {{ order.assigned_to_user.name }}
-                            {% else %}
-                                <span class="text-muted">Not assigned</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">
-                            No orders found for this customer
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+<style>
+    .customer-avatar {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+        background: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #007bff;
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline:before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dee2e6;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: -30px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #007bff;
+    }
+    
+    .timeline-content {
+        padding-left: 10px;
+    }
+    
+    .order-item {
+        border-left: 3px solid #28a745;
+        padding-left: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .order-item.cancelled {
+        border-left-color: #dc3545;
+    }
+    
+    .order-item.pending {
+        border-left-color: #ffc107;
+    }
+</style>
 
-<!-- Session History -->
-<div class="card">
-    <div class="card-header bg-info text-white">
-        <h5 class="mb-0">
-            <i class="fas fa-clock me-2"></i>Session History
-        </h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th>Login Time</th>
-                        <th>Logout Time</th>
-                        <th>Duration</th>
-                        <th>IP Address</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for session in sessions %}
-                    <tr>
-                        <td>{{ session.login_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                        <td>
-                            {% if session.logout_time %}
-                                {{ session.logout_time.strftime('%Y-%m-%d %H:%M:%S') }}
-                            {% else %}
-                                <span class="badge bg-warning">Active</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if session.logout_time %}
-                                {{ ((session.logout_time - session.login_time).total_seconds() / 60)|round(1) }} min
-                            {% else %}
-                                In progress
-                            {% endif %}
-                        </td>
-                        <td>{{ session.ip_address or 'N/A' }}</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted">No session history</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+<script>
+    // Mock customer data - in real app, this would come from API
+    const mockCustomer = {
+        id: {{ customer_id }},
+        name: 'John Doe',
+        email: 'john@example.com',
+        phone: '+91 9876543210',
+        address: '123 Main Street, Mumbai, Maharashtra 400001',
+        username: 'johndoe',
+        registered: '2024-01-15',
+        status: 'active',
+        total_orders: 5,
+        total_spent: 2500.50,
+        avg_order: 500.10,
+        last_order: '2024-02-20'
+    };
+    
+    // Mock orders data
+    const mockOrders = [
+        {
+            id: 1001,
+            date: '2024-02-20',
+            items: ['Pizza', 'Coke'],
+            amount: 450.00,
+            status: 'delivered'
+        },
+        {
+            id: 1002,
+            date: '2024-02-15',
+            items: ['Burger', 'Fries'],
+            amount: 300.00,
+            status: 'delivered'
+        },
+        {
+            id: 1003,
+            date: '2024-02-10',
+            items: ['Pasta', 'Garlic Bread'],
+            amount: 550.00,
+            status: 'cancelled'
+        },
+        {
+            id: 1004,
+            date: '2024-02-05',
+            items: ['Sandwich', 'Coffee'],
+            amount: 200.00,
+            status: 'delivered'
+        },
+        {
+            id: 1005,
+            date: '2024-02-01',
+            items: ['Biryani', 'Salad'],
+            amount: 400.00,
+            status: 'pending'
+        }
+    ];
+    
+    // Mock activity timeline
+    const mockActivities = [
+        {
+            type: 'order',
+            title: 'Placed New Order',
+            description: 'Order #1005 placed for ₹400.00',
+            time: '2 days ago'
+        },
+        {
+            type: 'login',
+            title: 'Logged In',
+            description: 'Customer logged into account',
+            time: '3 days ago'
+        },
+        {
+            type: 'order',
+            title: 'Order Delivered',
+            description: 'Order #1004 delivered successfully',
+            time: '1 week ago'
+        },
+        {
+            type: 'profile',
+            title: 'Profile Updated',
+            description: 'Updated delivery address',
+            time: '2 weeks ago'
+        }
+    ];
+    
+    function loadCustomerDetails() {
+        // In real app: fetch(`/api/customers/{{ customer_id }}`)
+        
+        // Set customer info
+        document.getElementById('customerName').textContent = mockCustomer.name;
+        document.getElementById('customerEmail').textContent = mockCustomer.email;
+        document.getElementById('customerPhone').textContent = mockCustomer.phone;
+        document.getElementById('customerAddress').textContent = mockCustomer.address;
+        document.getElementById('customerUsername').textContent = mockCustomer.username;
+        document.getElementById('customerRegistered').textContent = 
+            new Date(mockCustomer.registered).toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        
+        // Calculate days since last order
+        const lastOrderDate = new Date(mockCustomer.last_order);
+        const today = new Date();
+        const daysSince = Math.floor((today - lastOrderDate) / (1000 * 60 * 60 * 24));
+        
+        // Set stats
+        document.getElementById('totalOrdersCount').textContent = mockCustomer.total_orders;
+        document.getElementById('totalSpent').textContent = '₹' + mockCustomer.total_spent.toFixed(2);
+        document.getElementById('avgOrderValue').textContent = '₹' + mockCustomer.avg_order.toFixed(2);
+        document.getElementById('lastOrderDays').textContent = daysSince;
+        
+        // Update status badge
+        const statusBadge = document.getElementById('customerStatus');
+        statusBadge.textContent = mockCustomer.status.charAt(0).toUpperCase() + mockCustomer.status.slice(1);
+        statusBadge.className = 'badge bg-' + (mockCustomer.status === 'active' ? 'success' : 'warning');
+        
+        // Load orders
+        renderOrders();
+        
+        // Load activity timeline
+        renderActivityTimeline();
+    }
+    
+    function renderOrders() {
+        const container = document.getElementById('ordersContainer');
+        let html = '<div class="table-responsive"><table class="table table-hover">';
+        html += '<thead><tr><th>Order ID</th><th>Date</th><th>Items</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>';
+        html += '<tbody>';
+        
+        mockOrders.forEach(order => {
+            html += `
+                <tr>
+                    <td>#${order.id}</td>
+                    <td>${new Date(order.date).toLocaleDateString('en-IN')}</td>
+                    <td>${order.items.join(', ')}</td>
+                    <td>₹${order.amount.toFixed(2)}</td>
+                    <td>
+                        <span class="badge bg-${order.status === 'delivered' ? 'success' : order.status === 'pending' ? 'warning' : 'danger'}">
+                            ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewOrder(${order.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+    
+    function renderActivityTimeline() {
+        const timeline = document.getElementById('activityTimeline');
+        let html = '';
+        
+        mockActivities.forEach(activity => {
+            const icon = activity.type === 'order' ? 'fa-shopping-cart' : 
+                         activity.type === 'login' ? 'fa-sign-in-alt' : 'fa-user-edit';
+            const color = activity.type === 'order' ? 'primary' : 
+                          activity.type === 'login' ? 'success' : 'info';
+            
+            html += `
+                <div class="timeline-item">
+                    <div class="timeline-marker bg-${color}"></div>
+                    <div class="timeline-content">
+                        <h6><i class="fas ${icon}"></i> ${activity.title}</h6>
+                        <p class="text-muted small">${activity.description}</p>
+                        <small class="text-muted">${activity.time}</small>
+                    </div>
+                </div>
+            `;
+        });
+        
+        timeline.innerHTML = html;
+    }
+    
+    function editCustomer() {
+        alert('Edit customer feature would open here.');
+        // window.location.href = `/admin/customer/{{ customer_id }}/edit`;
+    }
+    
+    function sendMessage() {
+        alert('Send message to customer feature would open here.');
+    }
+    
+    function viewOrder(orderId) {
+        alert(`View order #${orderId} details.`);
+        // window.location.href = `/admin/order/${orderId}`;
+    }
+    
+    function printCustomerDetails() {
+        window.print();
+    }
+    
+    function exportCustomerData() {
+        alert('Customer data would be exported to CSV/Excel.');
+    }
+    
+    // Load data on page load
+    document.addEventListener('DOMContentLoaded', loadCustomerDetails);
+</script>
 {% endblock %}
