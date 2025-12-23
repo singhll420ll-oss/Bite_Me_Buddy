@@ -38,7 +38,7 @@ def get_table_data(table_name, limit=100):
     db = SessionLocal()
     try:
         # First, get column names
-        columns_query = text(f"""
+        columns_query = text("""
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = :table_name 
@@ -47,8 +47,8 @@ def get_table_data(table_name, limit=100):
         columns_result = db.execute(columns_query, {"table_name": table_name})
         columns = [row[0] for row in columns_result]
         
-        # Then get data
-        data_query = text(f"SELECT * FROM {table_name} LIMIT {limit}")
+        # Then get data - SQLAlchemy 1.4 format
+        data_query = text("SELECT * FROM {} LIMIT {}".format(table_name, limit))
         data_result = db.execute(data_query)
         data = data_result.fetchall()
         
@@ -92,7 +92,7 @@ def get_table_info(table_name):
         columns_info = result.fetchall()
         
         # Get row count
-        count_query = text(f"SELECT COUNT(*) FROM {table_name}")
+        count_query = text("SELECT COUNT(*) FROM {}".format(table_name))
         count_result = db.execute(count_query)
         row_count = count_result.scalar()
         
