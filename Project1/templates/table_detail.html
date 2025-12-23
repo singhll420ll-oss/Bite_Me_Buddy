@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ table_name }} - Bite Me Buddy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div>
+                    <a href="/" class="text-xl font-bold text-gray-800 hover:text-blue-600">
+                        <i class="fas fa-database mr-2"></i>Bite Me Buddy
+                    </a>
+                    <span class="mx-2 text-gray-400">/</span>
+                    <a href="/tables" class="text-gray-600 hover:text-blue-600">Tables</a>
+                    <span class="mx-2 text-gray-400">/</span>
+                    <span class="font-semibold text-blue-600">{{ table_name }}</span>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="/tables" class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </a>
+                    <a href="/" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-home mr-2"></i>Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Table Header -->
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="flex flex-wrap justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                        <i class="fas fa-table text-blue-500 mr-3"></i>
+                        {{ table_name }}
+                    </h1>
+                    <div class="flex flex-wrap items-center space-x-4">
+                        <span class="text-gray-600">
+                            <i class="fas fa-list mr-1"></i>
+                            {{ count }} rows displayed
+                        </span>
+                        <span class="text-gray-600">
+                            <i class="fas fa-columns mr-1"></i>
+                            {{ columns|length }} columns
+                        </span>
+                        {% if table_info %}
+                        <span class="text-gray-600">
+                            <i class="fas fa-database mr-1"></i>
+                            {{ table_info.row_count }} total rows
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Limit Selector -->
+                <div class="mt-4 md:mt-0">
+                    <form method="get" class="flex items-center">
+                        <label class="mr-3 text-gray-700">
+                            <i class="fas fa-filter mr-1"></i>Show:
+                        </label>
+                        <select name="limit" onchange="this.form.submit()" 
+                                class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="50" {% if request.query_params.get('limit', '100') == '50' %}selected{% endif %}>50 rows</option>
+                            <option value="100" {% if request.query_params.get('limit', '100') == '100' %}selected{% endif %}>100 rows</option>
+                            <option value="200" {% if request.query_params.get('limit', '100') == '200' %}selected{% endif %}>200 rows</option>
+                            <option value="500" {% if request.query_params.get('limit', '100') == '500' %}selected{% endif %}>500 rows</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Schema -->
+        {% if table_info %}
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-info-circle text-green-500 mr-2"></i>
+                Table Schema
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Column Name</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Data Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Nullable</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">Default</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for col in table_info.columns_info %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                <i class="fas fa-columns text-blue-400 mr-2"></i>{{ col.name }}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">{{ col.type }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700">
+                                {% if col.nullable == 'YES' %}
+                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Nullable</span>
+                                {% else %}
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Not Null</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-sm text-gray-700 font-mono">
+                                {{ col.default if col.default else 'NULL' }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Data Table -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800">
+                    <i class="fas fa-list text-purple-500 mr-2"></i>
+                    Table Data
+                </h2>
+                <p class="text-gray-600 text-sm mt-1">
+                    Showing first {{ count }} records. Use search to filter data.
+                </p>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table id="dataTable" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            {% for column in columns %}
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                {{ column }}
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for row in data %}
+                        <tr class="hover:bg-gray-50">
+                            {% for column in columns %}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                                {% if row[column] is none %}
+                                    <span class="text-gray-400 italic">NULL</span>
+                                {% elif row[column] is string and row[column]|length > 50 %}
+                                    {{ row[column][:50] }}...
+                                {% elif row[column] is mapping %}
+                                    <span class="text-purple-600 font-mono text-xs">JSON Object</span>
+                                {% else %}
+                                    {{ row[column] }}
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Table Footer -->
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-gray-600">
+                        Showing <span class="font-semibold">{{ count }}</span> records
+                    </div>
+                    <div class="flex space-x-3">
+                        <button onclick="exportToCSV()" class="text-sm bg-green-100 hover:bg-green-200 text-green-800 px-4 py-2 rounded-lg">
+                            <i class="fas fa-download mr-1"></i>Export CSV
+                        </button>
+                        <button onclick="copyData()" class="text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg">
+                            <i class="fas fa-copy mr-1"></i>Copy Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Raw Data JSON -->
+        <div class="bg-gray-800 text-white rounded-xl shadow-md p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">
+                    <i class="fas fa-code mr-2"></i>
+                    Raw JSON Data
+                </h2>
+                <button onclick="toggleJSON()" class="text-sm bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg">
+                    <i class="fas fa-eye mr-1"></i>Toggle View
+                </button>
+            </div>
+            <pre id="jsonData" class="text-sm overflow-auto max-h-64 bg-gray-900 p-4 rounded-lg hidden">
+{{ data|tojson(indent=2) }}
+            </pre>
+            <div id="jsonPlaceholder" class="text-center py-8 text-gray-400">
+                <i class="fas fa-code text-3xl mb-2"></i>
+                <p>Click "Toggle View" to see raw JSON data</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Top -->
+    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
+            class="fixed bottom-6 right-6 bg-blue-500 text-white p-3 rounded-full shadow-lg hover:bg-blue-600">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script>
+        // Initialize DataTable
+        $(document).ready(function() {
+            $('#dataTable').DataTable({
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                dom: '<"flex justify-between items-center mb-4"<"flex"l><"flex"f>>rt<"flex justify-between items-center mt-4"<"flex"i><"flex"p>>',
+                language: {
+                    search: "Search in table:",
+                    lengthMenu: "Show _MENU_ entries"
+                }
+            });
+        });
+
+        // Toggle JSON view
+        function toggleJSON() {
+            const jsonData = document.getElementById('jsonData');
+            const placeholder = document.getElementById('jsonPlaceholder');
+            
+            if (jsonData.classList.contains('hidden')) {
+                jsonData.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            } else {
+                jsonData.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            const table = document.getElementById('dataTable');
+            const rows = table.querySelectorAll('tr');
+            let csv = [];
+            
+            rows.forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('th, td').forEach(cell => {
+                    let cellText = cell.innerText;
+                    // Handle special characters
+                    cellText = cellText.replace(/"/g, '""');
+                    if (cellText.includes(',') || cellText.includes('"') || cellText.includes('\n')) {
+                        cellText = '"' + cellText + '"';
+                    }
+                    rowData.push(cellText);
+                });
+                csv.push(rowData.join(','));
+            });
+            
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '{{ table_name }}_data.csv';
+            a.click();
+        }
+
+        // Copy data to clipboard
+        function copyData() {
+            const table = document.getElementById('dataTable');
+            let text = '';
+            
+            table.querySelectorAll('tr').forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('th, td').forEach(cell => {
+                    rowData.push(cell.innerText);
+                });
+                text += rowData.join('\t') + '\n';
+            });
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Table data copied to clipboard!');
+            });
+        }
+
+        // Refresh data
+        function refreshData() {
+            window.location.reload();
+        }
+    </script>
+</body>
+                          </html>
