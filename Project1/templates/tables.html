@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Tables - Bite Me Buddy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div>
+                    <a href="/" class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-database text-blue-500 mr-2"></i>
+                        Bite Me Buddy
+                    </a>
+                    <span class="ml-4 text-gray-500">/ Tables</span>
+                </div>
+                <a href="/" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-home mr-2"></i>Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-list-alt text-blue-500 mr-3"></i>
+                Database Tables
+            </h1>
+            <p class="text-gray-600">
+                Total {{ tables|length }} tables found in the database
+            </p>
+        </div>
+
+        <!-- Search Box -->
+        <div class="mb-6">
+            <div class="relative">
+                <input type="text" 
+                       id="searchInput" 
+                       placeholder="Search tables..." 
+                       class="w-full p-4 pl-12 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <i class="fas fa-search absolute left-4 top-4 text-gray-400"></i>
+            </div>
+        </div>
+
+        <!-- Tables Grid -->
+        {% if tables %}
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for table in tables %}
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-300 table-card">
+                <div class="p-6">
+                    <!-- Table Header -->
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-1">
+                                <i class="fas fa-table text-blue-500 mr-2"></i>
+                                {{ table.name }}
+                            </h3>
+                            <div class="flex items-center space-x-4 text-sm">
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                    <i class="fas fa-columns mr-1"></i>
+                                    {{ table.columns_count }} cols
+                                </span>
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded">
+                                    <i class="fas fa-list mr-1"></i>
+                                    {{ table.row_count }} rows
+                                </span>
+                            </div>
+                        </div>
+                        <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full">
+                            {{ loop.index }}
+                        </span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-6">
+                        <a href="/table/{{ table.name }}" 
+                           class="block w-full bg-blue-500 hover:bg-blue-600 text-white text-center py-3 rounded-lg font-semibold mb-3">
+                            <i class="fas fa-eye mr-2"></i>View Data
+                        </a>
+                        
+                        <div class="flex space-x-2">
+                            <button onclick="loadSample('{{ table.name }}')" 
+                                    class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 rounded-lg text-sm">
+                                <i class="fas fa-code mr-1"></i>Sample
+                            </button>
+                            <button onclick="copyTableName('{{ table.name }}')" 
+                                    class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 rounded-lg text-sm">
+                                <i class="fas fa-copy mr-1"></i>Copy Name
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+                    <div class="text-xs text-gray-500">
+                        <i class="far fa-clock mr-1"></i>
+                        Click "View Data" to explore
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- No Tables Found -->
+        <div class="text-center py-16">
+            <div class="text-6xl text-gray-300 mb-4">
+                <i class="fas fa-database"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-600 mb-2">No Tables Found</h3>
+            <p class="text-gray-500">The database doesn't contain any tables or connection failed.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Back to Top -->
+    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
+            class="fixed bottom-6 right-6 bg-blue-500 text-white p-3 rounded-full shadow-lg hover:bg-blue-600">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script>
+        // Table search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const tableCards = document.querySelectorAll('.table-card');
+            
+            tableCards.forEach(card => {
+                const tableName = card.querySelector('h3').textContent.toLowerCase();
+                if (tableName.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Copy table name to clipboard
+        function copyTableName(tableName) {
+            navigator.clipboard.writeText(tableName).then(() => {
+                alert(`Copied: ${tableName}`);
+            });
+        }
+
+        // Load sample data
+        function loadSample(tableName) {
+            fetch(`/api/table/${tableName}?limit=5`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Sample data for ${tableName}:\n\n` + 
+                              JSON.stringify(data.data.slice(0, 2), null, 2));
+                    } else {
+                        alert('Error loading sample data');
+                    }
+                });
+        }
+
+        // Sort functionality (optional)
+        function sortTables(criteria) {
+            // Implement sorting if needed
+        }
+    </script>
+</body>
+  </html>
