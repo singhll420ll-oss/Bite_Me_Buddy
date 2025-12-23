@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bite Me Buddy - Database Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto px-4 py-16">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
+                    <i class="fas fa-database mr-3"></i>Bite Me Buddy
+                </h1>
+                <p class="text-xl text-white opacity-90 mb-6">
+                    Database Management & Viewer
+                </p>
+                <div class="inline-flex items-center bg-white bg-opacity-20 rounded-full px-4 py-2">
+                    <i class="fas fa-plug text-white mr-2"></i>
+                    <span class="text-white font-mono text-sm">
+                        Database Connected
+                    </span>
+                </div>
+            </div>
+
+            <!-- Main Card -->
+            <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                <div class="md:flex">
+                    <!-- Left Side - Info -->
+                    <div class="md:w-2/5 bg-gray-50 p-8">
+                        <div class="mb-8">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                                About This Tool
+                            </h2>
+                            <p class="text-gray-600 mb-4">
+                                This web interface allows you to view and manage your Bite Me Buddy database. 
+                                You can browse tables, view data, and analyze your database structure.
+                            </p>
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <i class="fas fa-table text-green-500 w-6"></i>
+                                    <span class="ml-2 text-gray-700">View all database tables</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-eye text-purple-500 w-6"></i>
+                                    <span class="ml-2 text-gray-700">Browse table data</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-columns text-red-500 w-6"></i>
+                                    <span class="ml-2 text-gray-700">See column information</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="bg-blue-50 rounded-xl p-5">
+                            <h3 class="font-bold text-gray-800 mb-3">
+                                <i class="fas fa-chart-bar mr-2"></i>Quick Actions
+                            </h3>
+                            <a href="/health" class="block text-blue-600 hover:text-blue-800 mb-2">
+                                <i class="fas fa-heartbeat mr-2"></i>Check Health Status
+                            </a>
+                            <a href="/api/tables" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-code mr-2"></i>View API Data
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Right Side - Actions -->
+                    <div class="md:w-3/5 p-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                            <i class="fas fa-rocket text-orange-500 mr-2"></i>
+                            Get Started
+                        </h2>
+
+                        <!-- Main Action Button -->
+                        <a href="/tables" 
+                           class="block w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center py-4 rounded-xl font-bold text-lg mb-8 card-hover">
+                            <i class="fas fa-database mr-2"></i>
+                            View Database Tables
+                        </a>
+
+                        <!-- Features Grid -->
+                        <div class="grid md:grid-cols-2 gap-4 mb-8">
+                            <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 card-hover">
+                                <div class="text-blue-500 text-2xl mb-3">
+                                    <i class="fas fa-list"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 mb-2">Table List</h3>
+                                <p class="text-gray-600 text-sm">
+                                    Browse all tables in your database with row counts
+                                </p>
+                            </div>
+                            <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 card-hover">
+                                <div class="text-green-500 text-2xl mb-3">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 mb-2">Data Explorer</h3>
+                                <p class="text-gray-600 text-sm">
+                                    View and search through table data with pagination
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Connection Info -->
+                        <div class="bg-gray-800 text-white rounded-xl p-5">
+                            <h3 class="font-bold mb-3">
+                                <i class="fas fa-server mr-2"></i>Database Connection
+                            </h3>
+                            <div class="font-mono text-sm overflow-x-auto">
+                                <div class="text-green-400">
+                                    <i class="fas fa-circle text-xs mr-1"></i> Connected
+                                </div>
+                                <div class="text-gray-400 mt-2">
+                                    Host: dpg-d536f8khg0os738kuhm0-a
+                                </div>
+                                <div class="text-gray-400">
+                                    Database: bite_me_buddy
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="bg-gray-50 border-t border-gray-200 p-6 text-center">
+                    <p class="text-gray-600">
+                        <i class="fas fa-code mr-2"></i>
+                        Built with FastAPI & PostgreSQL | Bite Me Buddy
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple animation on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card-hover');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+  </html>
