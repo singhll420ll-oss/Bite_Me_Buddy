@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ table_name }} - Complete Data</title>
+    <style>
+        /* Same styles as above, with back button */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #4f46e5;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-button">← Back to All Tables</a>
+    
+    <div class="container">
+        <div class="header">
+            <h1>{{ table_name }} - Complete Data</h1>
+            <p>Total Rows: {{ row_count }}</p>
+        </div>
+        
+        <div class="tables-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        {% for column in columns %}
+                            <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                        <tr>
+                            {% for cell in row %}
+                                <td>
+                                    {% if cell == None %}
+                                        <span style="color: #94a3b8; font-style: italic;">NULL</span>
+                                    {% else %}
+                                        {{ cell }}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
