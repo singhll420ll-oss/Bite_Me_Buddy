@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bite Me Buddy - Database Data</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: #f8fafc;
+            padding: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .tables-container {
+            padding: 30px;
+        }
+        
+        .table-section {
+            margin-bottom: 40px;
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .table-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .table-title {
+            font-size: 1.8rem;
+            color: #1e293b;
+        }
+        
+        .table-count {
+            background: #4f46e5;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .data-table th {
+            background: #4f46e5;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .data-table tr:hover {
+            background: #f1f5f9;
+        }
+        
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .view-more {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .view-more a {
+            display: inline-block;
+            background: #4f46e5;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .view-more a:hover {
+            background: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 0.9rem;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .data-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+        
+        .json-view {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Bite Me Buddy Database</h1>
+            <p>PostgreSQL Database के सभी Tables और Data का Live View</p>
+        </div>
+        
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-number">{{ tables|length }}</div>
+                <div class="stat-label">Total Tables</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">
+                    {% set total_rows = [] %}
+                    {% for table_data in all_data.values() %}
+                        {% if total_rows.append(table_data.row_count) %}{% endif %}
+                    {% endfor %}
+                    {{ total_rows|sum }}
+                </div>
+                <div class="stat-label">Total Rows</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">
+                    {% set total_columns = [] %}
+                    {% for table_data in all_data.values() %}
+                        {% if total_columns.append(table_data.columns|length) %}{% endif %}
+                    {% endfor %}
+                    {{ total_columns|sum }}
+                </div>
+                <div class="stat-label">Total Columns</div>
+            </div>
+        </div>
+        
+        <div class="tables-container">
+            {% if tables %}
+                {% for table in tables %}
+                    {% set table_name = table[0] %}
+                    {% set table_data = all_data[table_name] %}
+                    
+                    <div class="table-section">
+                        <div class="table-header">
+                            <h2 class="table-title">{{ table_name }}</h2>
+                            <div class="table-count">
+                                {{ table_data.row_count }} rows
+                            </div>
+                        </div>
+                        
+                        {% if table_data.data %}
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        {% for column in table_data.columns %}
+                                            <th>{{ column }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in table_data.data %}
+                                        <tr>
+                                            {% for cell in row %}
+                                                <td>
+                                                    {% if cell == None %}
+                                                        <span style="color: #94a3b8; font-style: italic;">NULL</span>
+                                                    {% elif cell|length > 50 %}
+                                                        {{ cell[:50] }}...
+                                                    {% else %}
+                                                        {{ cell }}
+                                                    {% endif %}
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                            <div class="view-more">
+                                <a href="/table/{{ table_name }}">View Complete Table Data</a>
+                            </div>
+                        {% else %}
+                            <div class="no-data">
+                                This table has no data
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-data">
+                    No tables found in the database
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="footer">
+            <p>Database URL: postgresql://bite_me_buddy_user:*****@dpg-d536f8khg0os738kuhm0-a/bite_me_buddy</p>
+            <p>Last updated: {{ now }}</p>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-refresh every 30 seconds
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+        
+        // Add timestamp
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const timeElement = document.querySelector('.footer p:last-child');
+            if (timeElement) {
+                timeElement.textContent = 'Last updated: ' + now.toLocaleString();
+            }
+            
+            // Add hover effects
+            const rows = document.querySelectorAll('.data-table tr');
+            rows.forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    this.style.transition = 'all 0.2s ease';
+                });
+            });
+        });
+    </script>
+</body>
+  </html>
